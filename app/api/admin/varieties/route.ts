@@ -1,0 +1,72 @@
+// app/api/admin/varieties/route.ts
+import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('hop_varieties')
+      .select('*')
+      .eq('is_active', true)
+      .order('is_own_brand', { ascending: false })
+      .order('name')
+
+    if (error) throw error
+
+    // snake_case → camelCase 변환
+    const mapped = (data ?? []).map((v: Record<string, unknown>) => ({
+      id:                   v.id,
+      code:                 v.code,
+      name:                 v.name,
+      nameKo:               v.name_ko,
+      characteristics:      v.characteristics,
+      unitPrice:            v.unit_price,
+      recommendedSpacingM:  v.recommended_spacing_m,
+      isActive:             v.is_active,
+      isOwnBrand:           v.is_own_brand,
+    }))
+
+    return NextResponse.json({ success: true, data: mapped })
+  } catch (e) {
+    console.error('varieties GET error:', e)
+    return NextResponse.json({ success: false, error: String(e), data: [] })
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return Response.json({ success: false, error: '로그인 필요' }, { status: 401 })
+
+    const body = await req.json()
+    const { code, name, characteristics, unitPrice, recommendedSpacingM, isOwnBrand } = body
+    if (!code || !name || !unitPrice) {
+      return Response.json({ success: false, error: '코드, 품종명, 단가는 필수입니다' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase.from('hop_varieties').insert({
+      code,
+      name,
+      characteristics: characteristics ?? null,
+      unit_price: Number(unitPrice),
+      recommended_spacing_m: Number(recommendedSpacingM) || 1.2,
+      is_own_brand: isOwnBrand ?? false,
+      is_active: true,
+    }).select().single()
+
+    if (error) {
+      console.error('varieties POST error:', error)
+      return Response.json({ success: false, error: error.message }, { status: 500 })
+    }
+    return Response.json({ success: true, data })
+  } catch (e) {
+    return Response.json({ success: false, error: String(e) }, { status: 500 })
+  }
+}
