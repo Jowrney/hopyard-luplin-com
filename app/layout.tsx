@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <body>
     <StyledComponentsRegistry>
       <Providers>
-        {children}
+        {children} 1
       </Providers>
     </StyledComponentsRegistry>
     </body>
