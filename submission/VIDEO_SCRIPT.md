@@ -15,9 +15,9 @@
 
 ## Language versions
 
-- Official challenge version: English male narration with English-only burned captions
-- Korean companion version: Korean male narration (`ko-KR-HyunsuMultilingualNeural`) with Korean-only burned captions
-- Both versions use the same verified browser recording and 2:39 scene timing
+- Official challenge version: English male narration with English-only burned captions, approximately 2:41
+- Korean companion version: Korean male narration (`ko-KR-HyunsuMultilingualNeural`) with Korean-only burned captions, approximately 2:39
+- Both versions use the same verified action sequence, with language-specific scene timing so neither voice sounds rushed
 
 ## Visual sequence
 
