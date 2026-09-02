@@ -1,5 +1,13 @@
 # Devpost form copy
 
+## Project name
+
+Hopyard Designer
+
+## Project tagline
+
+Agent-assisted hopyard planning with live estimates and shared 2D/3D review.
+
 ## About the project
 
 Paste the following Markdown into **About the project**:
@@ -51,7 +59,7 @@ When a candidate enters preview, the page dynamically registers two more tools:
 
 This changes the available tool set from five to seven. Apply and Discard only exist while there is an active preview. After either action, the page returns to five tools.
 
-That lifecycle is also the approval boundary. The agent can explore and prepare options, but it must wait for the farmer before keeping or discarding the preview.
+That lifecycle creates a visible review step. The agent can prepare and preview options, while the farmer uses the shared interface to decide whether to apply or discard the active preview. The `apply_candidate` tool description explicitly directs the agent to use it only after user approval.
 
 ## How we built it
 
