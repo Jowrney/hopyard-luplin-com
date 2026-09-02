@@ -18,6 +18,7 @@ import { DesignWebMCP } from '@/components/webmcp/DesignWebMCP'
 import { createClient } from '@/lib/supabase/client'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 // ── 동적 임포트 ───────────────────────────────────────
 const FarmCanvas2D = dynamic(
@@ -63,17 +64,6 @@ const HeaderLogo = styled(Link)`
     text-decoration: none;
 `
 
-const LogoMain = styled.span`
-    font-weight: 700;
-    color: #2D5A27;
-    letter-spacing: -0.02em;
-`
-
-const LogoSub = styled.span`
-    color: #8BA888;
-    font-size: 0.875rem;
-    font-weight: 500;
-`
 
 const HeaderDivider = styled.div`
     width: 1px;
@@ -365,9 +355,7 @@ export default function DesignPage() {
       <PageHeader>
         <HeaderLeft>
           <HeaderLogo href="/">
-            <span style={{ fontSize: '1.25rem' }}>🌿</span>
-            <LogoMain>HopEden</LogoMain>
-            <LogoSub>Designer</LogoSub>
+            <BrandLogo width={178} />
           </HeaderLogo>
           <HeaderDivider />
           <PageLabel>{isDemo ? text('WebMCP Challenge Demo', 'WebMCP 챌린지 데모') : text('New design', '새 설계안')}</PageLabel>

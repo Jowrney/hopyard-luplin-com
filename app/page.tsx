@@ -4,6 +4,7 @@ import Link from 'next/link'
 import styled from 'styled-components'
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
 import { useLocale } from '@/components/i18n/LocaleProvider'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 const Page = styled.main`
     min-height: 100vh;
@@ -19,18 +20,10 @@ const Header = styled.header`
     justify-content: space-between;
 `
 
-const Logo = styled.div`
+const Logo = styled(Link)`
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-`
-
-const LogoEmoji = styled.span`font-size: 1.5rem;`
-
-const LogoText = styled.span`
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #15803d;
+    text-decoration: none;
 `
 
 const Hero = styled.section`
@@ -133,9 +126,8 @@ export default function LandingPage() {
   return (
     <Page>
       <Header>
-        <Logo>
-          <LogoEmoji>🌿</LogoEmoji>
-          <LogoText>HopEden Designer</LogoText>
+        <Logo href="/" aria-label="Hopyard Designer home">
+          <BrandLogo width={190} />
         </Logo>
         <LanguageSwitcher />
       </Header>

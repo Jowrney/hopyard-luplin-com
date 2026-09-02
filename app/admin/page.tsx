@@ -7,6 +7,7 @@ import styled from 'styled-components'
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import { getEstimateItemLabel, getUnitLabel, getVarietyDescription, getVarietyName } from '@/lib/i18n'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 // ── 타입 ──────────────────────────────────────────────
 interface Material {
@@ -797,8 +798,7 @@ export default function AdminPage() {
       <PageHeader>
         <HeaderLeft>
           <HeaderLogo href="/">
-            <span style={{ fontSize: '1.25rem' }}>🌿</span>
-            <span style={{ fontWeight: 700 }}>HopEden</span>
+            <BrandLogo width={170} variant="light" />
           </HeaderLogo>
           <HeaderDivider />
           <HeaderLabel>{text('Admin — Material pricing', '관리자 — 자재 단가 관리')}</HeaderLabel>

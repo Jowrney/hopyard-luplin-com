@@ -7,6 +7,7 @@ import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
 import { useLocale } from '@/components/i18n/LocaleProvider'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 // ── 타입 ──────────────────────────────────────────────
 interface Design {
@@ -74,15 +75,6 @@ const HeaderLogo = styled(Link)`
     text-decoration: none;
 `
 
-const LogoMain = styled.span`
-    font-weight: 700;
-    color: #2D5A27;
-`
-
-const LogoSub = styled.span`
-    color: #8BA888;
-    font-size: 0.875rem;
-`
 
 const Divider = styled.div`
     width: 1px;
@@ -515,9 +507,7 @@ export default function ProjectsPage() {
       <PageHeader>
         <HeaderLeft>
           <HeaderLogo href="/">
-            <span style={{ fontSize: '1.25rem' }}>🌿</span>
-            <LogoMain>HopEden</LogoMain>
-            <LogoSub>Designer</LogoSub>
+            <BrandLogo width={178} />
           </HeaderLogo>
           <Divider />
           <PageLabel>{text('My projects', '내 프로젝트')}</PageLabel>
