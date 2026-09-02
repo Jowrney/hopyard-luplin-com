@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import styled from 'styled-components'
 import { useSafeWebMCP } from '@/lib/webmcp/use-safe-webmcp'
 import { listRegionalProfiles } from '@/lib/design/regional-profiles'
@@ -55,6 +55,7 @@ function currentContext() {
 
 export function DesignWebMCP() {
   const [helpOpen, setHelpOpen] = useState(false)
+  const closeHelp = useCallback(() => setHelpOpen(false), [])
   const hasPreview = useCandidateStore((state) => state.previewCandidate !== null)
   const reportError = (error: unknown) => console.error('WebMCP tool error:', error)
 
@@ -191,7 +192,7 @@ export function DesignWebMCP() {
       </StatusBadge>
       <WebMCPHelpDialog
         open={helpOpen}
-        onClose={() => setHelpOpen(false)}
+        onClose={closeHelp}
         supported={supported}
         registered={registered}
       />

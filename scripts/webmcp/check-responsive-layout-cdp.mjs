@@ -41,7 +41,20 @@ const capture = async (path) => {
 async function setViewport(width, height, mobile) {
   await call('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile })
   await call('Page.reload', { ignoreCache: true })
-  await wait(4500)
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    const ready = await evaluate(`Boolean(
+      document.querySelector('[aria-controls="design-input-panel"]') &&
+      document.querySelector('[aria-controls="design-review-panel"]') &&
+      document.querySelector('[data-testid="view-action-row"]') &&
+      document.querySelector('[data-testid="view-metrics-row"]')
+    )`)
+    if (ready) {
+      await wait(400)
+      return
+    }
+    await wait(250)
+  }
+  throw new Error(`Workspace did not become ready at ${width}×${height}.`)
 }
 
 const baseState = () => evaluate(`(() => {

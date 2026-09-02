@@ -11,7 +11,10 @@ test('numeric design inputs have programmatically associated labels', () => {
 
 test('WebMCP help moves focus into the dialog and restores it on close', () => {
   const source = readFileSync('components/webmcp/WebMCPHelpDialog.tsx', 'utf8')
+  const owner = readFileSync('components/webmcp/DesignWebMCP.tsx', 'utf8')
   assert.match(source, /closeButtonRef\.current\?\.focus\(\)/)
   assert.match(source, /previousFocusRef\.current\?\.focus\(\)/)
   assert.match(source, /dialogRef\.current/)
+  assert.match(owner, /const closeHelp = useCallback/)
+  assert.match(owner, /onClose={closeHelp}/)
 })
