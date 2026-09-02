@@ -6,21 +6,18 @@ import type { SafetyStatus } from '@/types'
 import { getRegionalProfile, type MaterialRole } from '@/lib/design/regional-profiles'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import { getEstimateCategoryLabel, getEstimateItemLabel, getUnitLabel } from '@/lib/i18n'
+import { ShieldCheck, ShieldWarning, WarningCircle } from '@phosphor-icons/react'
 
 // ── 스타일 ──────────────────────────────────────────
 const PanelWrapper = styled.div`
     display: flex;
     flex-direction: column;
-    height: 100%;
 `
 
 const PanelHeader = styled.div`
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #E8E4DC;
-    position: sticky;
-    top: 0;
     background: white;
-    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -41,8 +38,7 @@ const CalcText = styled.span`
 `
 
 const ScrollArea = styled.div`
-    flex: 1;
-    overflow-y: auto;
+    overflow-y: visible;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
@@ -132,6 +128,9 @@ const SafetyBarWrapper = styled.div<{ $status: SafetyStatus }>`
     padding: 0.625rem 1rem;
     font-size: 0.75rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     background: ${({ $status }) => ({ GREEN: '#f0fdf4', YELLOW: '#fefce8', RED: '#fef2f2' }[$status])};
     color: ${({ $status }) => ({ GREEN: '#15803d', YELLOW: '#ca8a04', RED: '#dc2626' }[$status])};
 `
@@ -213,37 +212,6 @@ const GrandLabel = styled.span`font-size: 0.875rem; color: rgba(255,255,255,0.8)
 const GrandValue = styled.span`font-size: 1.5rem; font-weight: 700;`
 const PerSqm = styled.p`font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: right; margin: 0;`
 
-// 하단 버튼
-const OutlineBtn = styled.button`
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid #2D5A27;
-    color: #2D5A27;
-    border-radius: 0.75rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    background: white;
-    cursor: pointer;
-    transition: background 0.15s;
-
-    &:hover { background: #F0F7EF; }
-`
-
-const PrimaryBtn = styled.button`
-    width: 100%;
-    padding: 0.75rem;
-    background: #2D5A27;
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background 0.15s;
-
-    &:hover { background: #234820; }
-`
-
 // 빈 상태
 const EmptyState = styled.div`
     text-align: center;
@@ -288,9 +256,9 @@ const CAT_COLORS: Record<string, string> = {
 }
 
 const SAFETY_LABEL: Record<SafetyStatus, { en: string; ko: string }> = {
-  GREEN:  { en: '✅ Structurally safe', ko: '✅ 구조 안전' },
-  YELLOW: { en: '⚠️ Caution — wire reinforcement recommended', ko: '⚠️ 주의 — 와이어 보강 권장' },
-  RED:    { en: '🚨 Danger — reinforce wire immediately', ko: '🚨 위험 — 와이어 즉시 보강 필요' },
+  GREEN:  { en: 'Structurally safe', ko: '구조 안전' },
+  YELLOW: { en: 'Caution — wire reinforcement recommended', ko: '주의 — 와이어 보강 권장' },
+  RED:    { en: 'Danger — reinforce wire immediately', ko: '위험 — 와이어 즉시 보강 필요' },
 }
 
 const REFERENCE_MATERIAL_KO: Record<string, { name: string; specification: string }> = {
@@ -306,7 +274,7 @@ const REFERENCE_MATERIAL_KO: Record<string, { name: string; specification: strin
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────
-export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
+export function EstimatePanel() {
   const { locale, text, number, currency } = useLocale()
   const { profileId, inputs, estimate, quantities, loads, isCalculating, discountMemo } = useDesignStore()
   const activeProfile = getRegionalProfile(profileId)
@@ -380,6 +348,9 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
               </WireDivider>
             </LoadCardBody>
             <SafetyBarWrapper $status={loads.safetyStatus}>
+              {loads.safetyStatus === 'GREEN' && <ShieldCheck size={16} weight="fill" />}
+              {loads.safetyStatus === 'YELLOW' && <WarningCircle size={16} weight="fill" />}
+              {loads.safetyStatus === 'RED' && <ShieldWarning size={16} weight="fill" />}
               {text(SAFETY_LABEL[loads.safetyStatus].en, SAFETY_LABEL[loads.safetyStatus].ko)}
             </SafetyBarWrapper>
           </LoadCard>
@@ -483,7 +454,6 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
               </TotalDivider>
             </TotalBox>
 
-            <OutlineBtn onClick={onPDFClick}>📄 {text('Export estimate PDF', '견적서 PDF 출력')}</OutlineBtn>
           </>
         ) : activeProfile.pricing.status === 'reference-only' && quantities ? (
           <ReferenceCard>

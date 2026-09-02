@@ -7,6 +7,7 @@ import type { SafetyStatus } from '@/types'
 import { useDesignStore } from '@/stores/designStore'
 import { WIRE_DIAMETER_TO_CODE } from '@/lib/calculations/loads'
 import { useLocale } from '@/components/i18n/LocaleProvider'
+import { Info, Lightning, ShieldCheck, ShieldWarning, WarningCircle } from '@phosphor-icons/react'
 
 const pulse = keyframes`0%,100%{opacity:1}50%{opacity:0.4}`
 
@@ -21,14 +22,12 @@ const Badge = styled.button<{ $status: SafetyStatus }>`
     ${({$status})=>$status==='RED'    && `border-color:#fecaca;color:#dc2626;background:#fef2f2;&:hover{background:#fee2e2;}`}
 `
 
-const Dot = styled.span<{ $status: SafetyStatus }>`
-    width:0.375rem;height:0.375rem;border-radius:50%;flex-shrink:0;
-    ${({$status})=>$status==='GREEN'  && `background:#22c55e;`}
-    ${({$status})=>$status==='YELLOW' && `background:#f59e0b;`}
-    ${({$status})=>$status==='RED'    && css`background:#ef4444;animation:${pulse} 1s infinite;`}
+const StatusIcon = styled.span<{ $status: SafetyStatus }>`
+    display:grid;place-items:center;flex-shrink:0;
+    ${({$status})=>$status==='RED' && css`animation:${pulse} 1s infinite;`}
 `
 
-const HintIcon = styled.span`font-size:0.625rem;opacity:0.6;margin-left:0.125rem;`
+const HintIcon = styled.span`display:grid;place-items:center;opacity:0.65;margin-left:0.125rem;`
 
 const Popover = styled.div`
     position:absolute;top:calc(100% + 0.5rem);left:0;background:white;
@@ -122,9 +121,13 @@ export function SafetyBadge() {
   return (
     <Wrapper ref={wrapperRef}>
       <Badge $status={safetyStatus} onClick={()=>setOpen(v=>!v)}>
-        <Dot $status={safetyStatus}/>
+        <StatusIcon $status={safetyStatus}>
+          {safetyStatus === 'GREEN' && <ShieldCheck size={15} weight="fill" />}
+          {safetyStatus === 'YELLOW' && <WarningCircle size={15} weight="fill" />}
+          {safetyStatus === 'RED' && <ShieldWarning size={15} weight="fill" />}
+        </StatusIcon>
         {text(STATUS_LABEL[safetyStatus].en, STATUS_LABEL[safetyStatus].ko)}
-        <HintIcon>ⓘ</HintIcon>
+        <HintIcon><Info size={13} weight="bold" /></HintIcon>
       </Badge>
 
       {open && (
@@ -161,7 +164,7 @@ export function SafetyBadge() {
               <>
                 <Divider/>
                 <UpgradeBtn onClick={handleUpgrade}>
-                  ⚡ {text(`Upgrade now to Φ${number(recommendedWireDiameterMM)} mm`, `Φ${number(recommendedWireDiameterMM)} mm으로 즉시 교체`)}
+                  <Lightning size={17} weight="fill" />{text(`Upgrade now to Φ${number(recommendedWireDiameterMM)} mm`, `Φ${number(recommendedWireDiameterMM)} mm으로 즉시 교체`)}
                 </UpgradeBtn>
               </>
             )}

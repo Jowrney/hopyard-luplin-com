@@ -48,18 +48,37 @@ const baseState = () => evaluate(`(() => {
   const inputButton = document.querySelector('[aria-controls="design-input-panel"]');
   const reviewButton = document.querySelector('[aria-controls="design-review-panel"]');
   const canvas = document.querySelector('main');
+  const logo = document.querySelector('header img[alt="Hopyard Designer"]');
+  const headerText = document.querySelector('header')?.innerText || '';
+  const tabs = [...document.querySelectorAll('main button')].map((node) => node.textContent?.trim()).filter(Boolean);
   return {
     innerWidth,
     scrollWidth: document.documentElement.scrollWidth,
     inputExpanded: inputButton?.getAttribute('aria-expanded'),
     reviewExpanded: reviewButton?.getAttribute('aria-expanded'),
     headerRight: reviewButton?.getBoundingClientRect().right ?? 0,
+    inputButtonLeft: inputButton?.getBoundingClientRect().left ?? -1,
+    reviewButtonRight: reviewButton?.getBoundingClientRect().right ?? -1,
+    logoCenter: logo ? logo.getBoundingClientRect().left + logo.getBoundingClientRect().width / 2 : -1,
+    topActions: headerText.includes('EN') && (headerText.includes('Structurally safe') || headerText.includes('Caution') || headerText.includes('Danger')) && headerText.includes('Estimate'),
+    viewTabs: tabs.filter((label) => label === '2D' || label === '3D'),
     canvasWidth: canvas?.getBoundingClientRect().width ?? 0,
   };
 })()`)
 
+const scrollOwners = () => evaluate(`(() => {
+  const count = (root) => [...root.querySelectorAll('*')].filter((node) => {
+    const style = getComputedStyle(node);
+    return /(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight + 1;
+  }).length + ((/(auto|scroll)/.test(getComputedStyle(root).overflowY) && root.scrollHeight > root.clientHeight + 1) ? 1 : 0);
+  const left = document.querySelector('#design-input-panel');
+  const right = document.querySelector('#design-review-panel');
+  return { left: left ? count(left) : -1, right: right ? count(right) : -1 };
+})()`)
+
 await setViewport(1440, 900, false)
 const desktop = await baseState()
+const desktopScrollOwners = await scrollOwners()
 await capture('/tmp/hopyard-layout-desktop.png')
 
 await setViewport(1024, 820, false)
@@ -78,6 +97,7 @@ const tabletRight = await evaluate(`(() => {
   const text=panel?.innerText || '';
   return {expanded:document.querySelector('[aria-controls="design-review-panel"]')?.getAttribute('aria-expanded'),left:rect?.left,right:rect?.right,width:rect?.width,utilities:/WebMCP/.test(text)&&/Estimate PDF/.test(text)&&/Structurally safe/.test(text)};
 })()`)
+const tabletScrollOwners = await scrollOwners()
 
 await setViewport(390, 844, true)
 const mobileClosed = await baseState()
@@ -90,14 +110,14 @@ const mobileRight = await evaluate(`(() => {
 })()`)
 await capture('/tmp/hopyard-layout-mobile-right.png')
 
-const report = { desktop, tabletClosed, tabletLeft, tabletRight, mobileClosed, mobileRight }
+const report = { desktop, desktopScrollOwners, tabletClosed, tabletLeft, tabletRight, tabletScrollOwners, mobileClosed, mobileRight }
 console.log(JSON.stringify(report, null, 2))
 ws.close()
 const valid =
-  desktop.scrollWidth === 1440 && desktop.headerRight <= 1440 && desktop.inputExpanded === 'true' && desktop.reviewExpanded === 'true' && desktop.canvasWidth >= 500 &&
-  tabletClosed.scrollWidth === 1024 && tabletClosed.inputExpanded === 'false' && tabletClosed.reviewExpanded === 'false' && tabletClosed.headerRight <= 1024 &&
+  desktop.scrollWidth === 1440 && desktop.headerRight <= 1440 && desktop.inputExpanded === 'true' && desktop.reviewExpanded === 'true' && desktop.canvasWidth >= 500 && Math.abs(desktop.logoCenter - 720) <= 1 && desktop.inputButtonLeft <= 25 && desktop.reviewButtonRight >= 1415 && desktop.topActions && desktop.viewTabs.length === 2 && desktopScrollOwners.left === 1 && desktopScrollOwners.right === 1 &&
+  tabletClosed.scrollWidth === 1024 && tabletClosed.inputExpanded === 'false' && tabletClosed.reviewExpanded === 'false' && tabletClosed.headerRight <= 1024 && Math.abs(tabletClosed.logoCenter - 512) <= 1 && !tabletClosed.topActions && tabletClosed.viewTabs.length === 2 &&
   tabletLeft.expanded === 'true' && tabletLeft.left >= 0 && tabletLeft.right <= 1024 &&
-  tabletRight.expanded === 'true' && tabletRight.left >= 0 && tabletRight.right <= 1024 && tabletRight.utilities &&
-  mobileClosed.scrollWidth === 390 && mobileClosed.inputExpanded === 'false' && mobileClosed.reviewExpanded === 'false' && mobileClosed.headerRight <= 390 &&
+  tabletRight.expanded === 'true' && tabletRight.left >= 0 && tabletRight.right <= 1024 && tabletRight.utilities && tabletScrollOwners.right === 1 &&
+  mobileClosed.scrollWidth === 390 && mobileClosed.inputExpanded === 'false' && mobileClosed.reviewExpanded === 'false' && mobileClosed.headerRight <= 390 && Math.abs(mobileClosed.logoCenter - 195) <= 1 && !mobileClosed.topActions && mobileClosed.viewTabs.length === 2 &&
   mobileRight.expanded === 'true' && mobileRight.left >= 0 && mobileRight.right <= 390 && mobileRight.scrollWidth === 390
 if (!valid) process.exit(1)

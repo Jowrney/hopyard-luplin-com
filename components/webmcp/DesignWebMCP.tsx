@@ -21,6 +21,7 @@ import { useCandidateStore } from '@/stores/candidateStore'
 import { useDesignStore } from '@/stores/designStore'
 import { usePriceStore } from '@/stores/priceStore'
 import { WebMCPHelpDialog } from '@/components/webmcp/WebMCPHelpDialog'
+import { PlugsConnected } from '@phosphor-icons/react'
 
 const StatusBadge = styled.button<{ $active: boolean }>`
   display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.55rem;
@@ -185,7 +186,7 @@ export function DesignWebMCP() {
         aria-expanded={helpOpen}
         onClick={() => setHelpOpen(true)}
       >
-        <span>{supported ? '●' : '○'}</span>
+        <PlugsConnected size={15} weight={supported ? 'fill' : 'bold'} aria-hidden="true" />
         <span>{supported ? `WebMCP ${registered}` : 'WebMCP ready'}</span>
       </StatusBadge>
       <WebMCPHelpDialog

@@ -19,6 +19,18 @@ import { createClient } from '@/lib/supabase/client'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
 import { BrandLogo } from '@/components/brand/BrandLogo'
+import {
+  Columns,
+  DownloadSimple,
+  FilePdf,
+  FloppyDisk,
+  LinkSimple,
+  Plant,
+  Receipt,
+  Ruler,
+  SlidersHorizontal,
+  X,
+} from '@phosphor-icons/react'
 
 // ── 동적 임포트 ───────────────────────────────────────
 const FarmCanvas2D = dynamic(
@@ -45,9 +57,9 @@ const PageHeader = styled.header`
     background: white;
     border-bottom: 1px solid #E8E4DC;
     padding: 0.75rem 1.5rem;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     z-index: 50;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     gap: 0.75rem;
@@ -59,36 +71,22 @@ const PageHeader = styled.header`
 const HeaderLeft = styled.div`
     display: flex;
     align-items: center;
-    gap: 1rem;
     min-width: 0;
-    @media (max-width: 1199px) {
-        gap: 0.5rem;
-    }
+`
+
+const HeaderCenter = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
 `
 
 const HeaderLogo = styled(Link)`
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     text-decoration: none;
-    flex-shrink: 1;
     min-width: 0;
-    img { width: clamp(132px, 22vw, 178px) !important; }
-`
-
-
-const HeaderDivider = styled.div`
-    width: 1px;
-    height: 1.25rem;
-    background: #e5e7eb;
-    @media (max-width: 720px) { display: none; }
-`
-
-const PageLabel = styled.span`
-    font-size: 0.875rem;
-    color: #6b7280;
-    white-space: nowrap;
-    @media (max-width: 720px) { display: none; }
+    img { width: clamp(132px, 18vw, 178px) !important; }
 `
 
 const HeaderRight = styled.div`
@@ -100,14 +98,23 @@ const HeaderRight = styled.div`
 `
 
 const PanelToggle = styled.button<{ $active:boolean }>`
-    display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.7rem;
+    width:2.4rem;height:2.4rem;display:inline-flex;align-items:center;justify-content:center;padding:0;
     border-radius:0.55rem;border:1px solid ${({$active})=>$active?'#86a882':'#dbe2db'};
     background:${({$active})=>$active?'#F0F7EF':'white'};color:#2D5A27;
-    font:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;
+    font:inherit;cursor:pointer;
     &:hover{background:#F0F7EF;}
     &:focus-visible{outline:2px solid #16a34a;outline-offset:2px;}
 `
-const PanelToggleLabel = styled.span`@media (max-width: 480px){display:none;}`
+
+const DesktopActions = styled.div`
+    display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;
+    @media (max-width: 1199px){display:none;}
+`
+
+const MobileUtilities = styled.div`
+    display:none;
+    @media (max-width: 1199px){display:contents;}
+`
 
 const PanelBackdrop = styled.button<{ $visible:boolean }>`
     display:none;
@@ -122,10 +129,10 @@ const PanelHeader = styled.div`
     position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
     min-height:3rem;padding:0.65rem 0.85rem;background:#F8FAF7;border-bottom:1px solid #E8E4DC;
 `
-const PanelTitle = styled.strong`font-size:0.8rem;color:#1A2E18;`
+const PanelTitle = styled.strong`font-size:0.8rem;color:#1A2E18;display:flex;align-items:center;gap:0.45rem;`
 const PanelClose = styled.button`
     width:2rem;height:2rem;border:1px solid #dbe2db;border-radius:0.45rem;background:white;
-    color:#475569;cursor:pointer;font-size:1rem;
+    color:#475569;cursor:pointer;display:grid;place-items:center;
 `
 const RightUtilities = styled.div`
     padding:0.7rem;border-bottom:1px solid #E8E4DC;display:flex;flex-wrap:wrap;gap:0.45rem;
@@ -150,6 +157,9 @@ const OutlineButton = styled.button`
     font-weight: 500;
     transition: background 0.15s;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 
     &:hover { background: #F0F7EF; }
 `
@@ -165,6 +175,9 @@ const PrimaryButton = styled.button`
     font-weight: 500;
     transition: background 0.15s;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 
     &:hover { background: #234820; }
 `
@@ -279,6 +292,9 @@ const PngButton = styled.button`
     background: white;
     cursor: pointer;
     transition: background 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 
     &:hover { background: #f9fafb; }
 `
@@ -485,31 +501,41 @@ export default function DesignPage() {
     <PageWrapper>
       <PageHeader>
         <HeaderLeft>
-          <HeaderLogo href="/">
-            <BrandLogo width={178} />
-          </HeaderLogo>
-          <HeaderDivider />
-          <PageLabel>{isDemo ? text('WebMCP Challenge Demo', 'WebMCP 챌린지 데모') : text('New design', '새 설계안')}</PageLabel>
-        </HeaderLeft>
-
-        <HeaderRight>
           <PanelToggle
             type="button"
             $active={leftPanelOpen}
             aria-controls="design-input-panel"
             aria-expanded={leftPanelOpen}
+            aria-label={text('Open design inputs', '설계 입력 열기')}
+            title={text('Design inputs', '설계 입력')}
             onClick={toggleLeftPanel}
           >
-            <span>☰</span><PanelToggleLabel>{text('Design inputs', '설계 입력')}</PanelToggleLabel>
+            <SlidersHorizontal size={20} weight="bold" aria-hidden="true" />
           </PanelToggle>
+        </HeaderLeft>
+
+        <HeaderCenter>
+          <HeaderLogo href="/" aria-label={text('Hopyard Designer home', 'Hopyard Designer 홈')}>
+            <BrandLogo width={178} />
+          </HeaderLogo>
+        </HeaderCenter>
+
+        <HeaderRight>
+          <DesktopActions>
+            <LanguageSwitcher />
+            <SafetyBadge />
+            <OutlineButton onClick={openPDF}><FilePdf size={18} weight="bold" />{text('Estimate PDF', '견적서')}</OutlineButton>
+          </DesktopActions>
           <PanelToggle
             type="button"
             $active={rightPanelOpen}
             aria-controls="design-review-panel"
             aria-expanded={rightPanelOpen}
+            aria-label={text('Open review & estimate', '검토 및 견적 열기')}
+            title={text('Review & estimate', '검토 및 견적')}
             onClick={toggleRightPanel}
           >
-            <span>▤</span><PanelToggleLabel>{text('Review & estimate', '검토 및 견적')}</PanelToggleLabel>
+            <Receipt size={20} weight="bold" aria-hidden="true" />
           </PanelToggle>
         </HeaderRight>
       </PageHeader>
@@ -523,8 +549,8 @@ export default function DesignPage() {
         />
         <LeftPanel id="design-input-panel" $open={leftPanelOpen} aria-hidden={!leftPanelOpen}>
           <PanelHeader>
-            <PanelTitle>{text('Design inputs', '설계 입력')}</PanelTitle>
-            <PanelClose type="button" onClick={() => setLeftPanelOpen(false)} aria-label={text('Close design inputs', '설계 입력 닫기')}>×</PanelClose>
+            <PanelTitle><SlidersHorizontal size={18} weight="bold" />{text('Design inputs', '설계 입력')}</PanelTitle>
+            <PanelClose type="button" onClick={() => setLeftPanelOpen(false)} aria-label={text('Close design inputs', '설계 입력 닫기')}><X size={17} weight="bold" /></PanelClose>
           </PanelHeader>
           <DesignInputForm />
         </LeftPanel>
@@ -534,21 +560,21 @@ export default function DesignPage() {
             <ViewTabs>
               {(['2d', '3d'] as ViewMode[]).map((mode) => (
                 <ViewTab key={mode} $active={viewMode === mode} onClick={() => setViewMode(mode)}>
-                  {mode === '2d' ? text('2D plan', '2D 평면도') : text('3D perspective', '3D 투시도')}
+                  {mode === '2d' ? text('2D', '2D') : text('3D', '3D')}
                 </ViewTab>
               ))}
             </ViewTabs>
 
             {quantities && (
               <ChipsRow>
-                <Chip><span>🏗️</span><span>{text(`${number(quantities.totalPoleCount)} poles`, `폴 ${number(quantities.totalPoleCount)}개`)}</span></Chip>
-                <Chip><span>🔗</span><span>{text(`${number(quantities.totalWireM)} m wire`, `와이어 ${number(quantities.totalWireM)}m`)}</span></Chip>
-                <Chip><span>🌱</span><span>{text(`${number(quantities.plantCount)} plants`, `${number(quantities.plantCount)}주`)}</span></Chip>
-                <Chip><span>📐</span><span>{text(`${number(inputs.widthM * inputs.heightM)} m²`, `${number(inputs.widthM * inputs.heightM)}㎡`)}</span></Chip>
+                <Chip><Columns size={15} weight="bold"/><span>{text(`${number(quantities.totalPoleCount)} poles`, `폴 ${number(quantities.totalPoleCount)}개`)}</span></Chip>
+                <Chip><LinkSimple size={15} weight="bold"/><span>{text(`${number(quantities.totalWireM)} m wire`, `와이어 ${number(quantities.totalWireM)}m`)}</span></Chip>
+                <Chip><Plant size={15} weight="fill"/><span>{text(`${number(quantities.plantCount)} plants`, `${number(quantities.plantCount)}주`)}</span></Chip>
+                <Chip><Ruler size={15} weight="bold"/><span>{text(`${number(inputs.widthM * inputs.heightM)} m²`, `${number(inputs.widthM * inputs.heightM)}㎡`)}</span></Chip>
               </ChipsRow>
             )}
 
-            <PngButton onClick={handlePngSave}>📥 {text('Save PNG', 'PNG 저장')}</PngButton>
+            <PngButton onClick={handlePngSave}><DownloadSimple size={16} weight="bold" />{text('Save PNG', 'PNG 저장')}</PngButton>
           </ViewToolbar>
 
           <CanvasArea ref={canvasAreaRef}>
@@ -560,19 +586,21 @@ export default function DesignPage() {
 
         <RightPanel id="design-review-panel" $open={rightPanelOpen} aria-hidden={!rightPanelOpen}>
           <PanelHeader>
-            <PanelTitle>{text('Review & estimate', '검토 및 견적')}</PanelTitle>
-            <PanelClose type="button" onClick={() => setRightPanelOpen(false)} aria-label={text('Close review panel', '검토 패널 닫기')}>×</PanelClose>
+            <PanelTitle><Receipt size={18} weight="bold" />{text('Review & estimate', '검토 및 견적')}</PanelTitle>
+            <PanelClose type="button" onClick={() => setRightPanelOpen(false)} aria-label={text('Close review panel', '검토 패널 닫기')}><X size={17} weight="bold" /></PanelClose>
           </PanelHeader>
           <RightUtilities>
-            <LanguageSwitcher />
             <DesignWebMCP />
-            <SafetyBadge />
+            <MobileUtilities>
+              <LanguageSwitcher />
+              <SafetyBadge />
+              <OutlineButton onClick={openPDF}><FilePdf size={18} weight="bold" />{text('Estimate PDF', '견적서')}</OutlineButton>
+            </MobileUtilities>
             {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
-            <OutlineButton onClick={openPDF}>📄 {text('Estimate PDF', '견적서 PDF')}</OutlineButton>
-            {!isDemo && <PrimaryButton onClick={openSave}>💾 {text('Save design', '설계 저장')}</PrimaryButton>}
+            {!isDemo && <PrimaryButton onClick={openSave}><FloppyDisk size={18} weight="bold" />{text('Save design', '설계 저장')}</PrimaryButton>}
             {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
           </RightUtilities>
-          <EstimatePanel onPDFClick={openPDF} />
+          <EstimatePanel />
         </RightPanel>
       </Body>
 

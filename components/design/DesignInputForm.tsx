@@ -16,6 +16,15 @@ import {
   getVarietyDescription,
   getVarietyName,
 } from '@/lib/i18n'
+import {
+  Anchor,
+  Columns,
+  CurrencyCircleDollar,
+  LinkSimple,
+  Plant,
+  Ruler,
+  TreeStructure,
+} from '@phosphor-icons/react'
 
 // ── 지역/와이어 단수 옵션 ──────────────────────────────
 const REGION_OPTIONS: { value: WindRegion; wind: string }[] = [
@@ -65,7 +74,7 @@ const SectionHeader = styled.div`
     margin-bottom: 0.75rem;
 `
 
-const SectionIcon = styled.span`font-size: 1rem;`
+const SectionIcon = styled.span`display:grid;place-items:center;color:#2D5A27;`
 
 const SectionTitle = styled.h3`
     font-size: 0.875rem;
@@ -510,7 +519,7 @@ interface Variety {
 
 // ── 서브 컴포넌트 ─────────────────────────────────────
 
-function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <SectionWrapper>
       <SectionHeader>
@@ -735,7 +744,7 @@ export function DesignInputForm() {
       </FormHeader>
 
       {/* 1. 농장 면적 */}
-      <Section title={text('Hopyard area', '농장 면적')} icon="📐">
+      <Section title={text('Hopyard area', '농장 면적')} icon={<Ruler size={18} weight="bold" />}>
         <Grid2>
           <NumberInput label={text('Width (m)', '가로 (m)')} value={inputs.widthM} min={5} max={500} step={1}
                        onChange={(v) => updateInputs({ widthM: v })} />
@@ -749,7 +758,7 @@ export function DesignInputForm() {
       </Section>
 
       {/* 2. 폴 선택 */}
-      <Section title={text('Select poles', '폴(지주) 선택')} icon="🏗️">
+      <Section title={text('Select poles', '폴(지주) 선택')} icon={<Columns size={18} weight="bold" />}>
         <DropdownWrap ref={poleRef}>
           <DropdownBtn onClick={() => setPoleOpen(v=>!v)}>
             <span>{poles.find(p=>p.code===selectedPoleCode)
@@ -784,7 +793,7 @@ export function DesignInputForm() {
       </Section>
 
       {/* 3. 와이어 선택 */}
-      <Section title={text('Select wire', '와이어 선택')} icon="🔗">
+      <Section title={text('Select wire', '와이어 선택')} icon={<LinkSimple size={18} weight="bold" />}>
         <DropdownWrap ref={wireRef}>
           <DropdownBtn onClick={() => setWireOpen(v=>!v)}>
             <span>{wires.find(w=>w.code===selectedWireCode)
@@ -812,7 +821,7 @@ export function DesignInputForm() {
       </Section>
 
       {/* 4. 앵커 선택 */}
-      <Section title={text('Select anchors', '앵커(지박) 선택')} icon="⚓">
+      <Section title={text('Select anchors', '앵커(지박) 선택')} icon={<Anchor size={18} weight="bold" />}>
         <DropdownWrap ref={anchorRef}>
           <DropdownBtn onClick={() => setAnchorOpen(v=>!v)}>
             <span>{anchors.find(a=>a.code===selectedAnchorCode)
@@ -837,7 +846,7 @@ export function DesignInputForm() {
       </Section>
 
       {/* 5. 홉 품종 */}
-      <Section title={text('Hop varieties (rhizomes)', '홉 품종(종근)')} icon="🌱">
+      <Section title={text('Hop varieties (rhizomes)', '홉 품종(종근)')} icon={<Plant size={18} weight="fill" />}>
         <DropdownWrap ref={varietyRef}>
           <DropdownBtn onClick={() => setVarietyOpen(v=>!v)}>
             <span>
@@ -928,7 +937,7 @@ export function DesignInputForm() {
       </Section>
 
       {/* 6. 유인방식 */}
-      <Section title={text('Training system', '유인방식')} icon="🌿">
+      <Section title={text('Training system', '유인방식')} icon={<TreeStructure size={18} weight="bold" />}>
         <DropdownWrap ref={trainRef}>
           <DropdownBtn onClick={() => setTrainOpen(v=>!v)}>
             <span>{inputs.trainingType === 'V'
@@ -994,7 +1003,7 @@ export function DesignInputForm() {
       </Section>
 
       {/* 7. 견적 옵션 */}
-      <Section title={text('Estimate options', '견적 옵션')} icon="💰">
+      <Section title={text('Estimate options', '견적 옵션')} icon={<CurrencyCircleDollar size={18} weight="bold" />}>
         <MaterialList>
           <ToggleOption label={text('Include installation', '시공비 포함')} description={text('Enter labor, equipment, planting, and other costs', '인건비·장비대·식재비·기타 직접 입력')}
                         checked={includeLabor} onChange={setIncludeLabor} />
