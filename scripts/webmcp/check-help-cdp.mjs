@@ -34,6 +34,8 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 await evaluate(`localStorage.setItem('hopeden.locale','en'); location.reload(); true`)
 await wait(4500)
+await evaluate(`document.querySelector('[aria-controls="design-review-panel"]')?.click(); true`)
+await wait(300)
 const opened = await evaluate(`(() => {
   const button = [...document.querySelectorAll('button')].find((node) => node.textContent?.includes('WebMCP'));
   button?.click();
@@ -43,6 +45,8 @@ await wait(300)
 const english = await evaluate(`document.querySelector('[role=dialog]')?.innerText || ''`)
 await evaluate(`localStorage.setItem('hopeden.locale','ko'); location.reload(); true`)
 await wait(4500)
+await evaluate(`document.querySelector('[aria-controls="design-review-panel"]')?.click(); true`)
+await wait(300)
 const reopened = await evaluate(`(() => {
   const button = [...document.querySelectorAll('button')].find((node) => node.textContent?.includes('WebMCP'));
   button?.click();
