@@ -6,24 +6,27 @@ import { useLocale } from '@/components/i18n/LocaleProvider'
 import {
   CORE_WEBMCP_TOOLS,
   PREVIEW_WEBMCP_TOOLS,
+  WEBMCP_PLATFORM_GUIDANCE,
   WEBMCP_TEST_PROMPTS,
   WEBMCP_TOOL_HELP,
 } from '@/lib/webmcp/help-content'
-import type { Locale } from '@/lib/i18n'
 
 const Overlay = styled.div`
   position:fixed;inset:0;z-index:300;background:rgba(15,23,42,0.48);
   backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
   padding:1rem;
+  @media(max-width:640px){padding:0.4rem;align-items:flex-end;}
 `
 const Dialog = styled.section`
   width:min(720px,calc(100vw - 2rem));max-height:min(840px,calc(100dvh - 2rem));
   overflow:hidden;background:white;border-radius:1rem;border:1px solid #dbe7d8;
   box-shadow:0 28px 80px rgba(15,23,42,0.3);display:flex;flex-direction:column;
+  @media(max-width:640px){width:100%;max-height:94dvh;border-radius:0.9rem 0.9rem 0 0;}
 `
 const Header = styled.header`
   padding:1rem 1.15rem;background:#1A2E18;color:white;display:flex;
   align-items:flex-start;justify-content:space-between;gap:1rem;
+  @media(max-width:640px){padding:0.8rem 0.9rem;}
 `
 const Eyebrow = styled.div`font-size:0.65rem;color:#86efac;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;`
 const Title = styled.h2`font-size:1.05rem;margin:0.2rem 0 0;font-weight:800;`
@@ -34,13 +37,10 @@ const CloseButton = styled.button`
   width:2rem;height:2rem;border:1px solid rgba(255,255,255,0.2);border-radius:0.5rem;
   background:rgba(255,255,255,0.08);color:white;cursor:pointer;font-size:1rem;
 `
-const Tabs = styled.div`display:flex;gap:0.35rem;padding:0.75rem 1.15rem 0;border-bottom:1px solid #e5e7eb;`
-const Tab = styled.button<{ $active:boolean }>`
-  border:0;border-bottom:2px solid ${({$active})=>$active?'#2D5A27':'transparent'};
-  background:transparent;color:${({$active})=>$active?'#1A2E18':'#64748b'};
-  padding:0.45rem 0.75rem 0.6rem;font-size:0.78rem;font-weight:800;cursor:pointer;
+const Body = styled.div`
+  padding:1rem 1.15rem 1.2rem;overflow-y:auto;overscroll-behavior:contain;
+  @media(max-width:640px){padding:0.8rem 0.85rem 1rem;}
 `
-const Body = styled.div`padding:1rem 1.15rem 1.2rem;overflow-y:auto;`
 const Intro = styled.p`margin:0 0 0.9rem;color:#475569;font-size:0.78rem;line-height:1.55;`
 const Section = styled.section`margin-top:1rem;`
 const SectionTitle = styled.h3`font-size:0.82rem;margin:0 0 0.55rem;color:#1A2E18;`
@@ -51,17 +51,21 @@ const Steps = styled.ol`
 const PromptBox = styled.div`
   margin-top:0.6rem;border:1px solid #bbd5b7;background:#f0f7ef;border-radius:0.75rem;
   padding:0.75rem;position:relative;
+  @media(max-width:640px){display:flex;flex-direction:column;gap:0.55rem;padding:0.65rem;}
 `
 const Prompt = styled.pre`
   margin:0;padding-right:5.2rem;white-space:pre-wrap;font:inherit;font-size:0.7rem;
   line-height:1.5;color:#264323;
+  overflow-wrap:anywhere;
+  @media(max-width:640px){padding-right:0;font-size:0.68rem;}
 `
 const CopyButton = styled.button`
   position:absolute;right:0.55rem;top:0.55rem;border:1px solid #86a882;background:white;
   color:#2D5A27;border-radius:0.45rem;padding:0.3rem 0.5rem;font-size:0.65rem;
   font-weight:800;cursor:pointer;
+  @media(max-width:640px){position:static;align-self:flex-end;}
 `
-const ToolGrid = styled.div`display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;@media(max-width:620px){grid-template-columns:1fr;}`
+const ToolGrid = styled.div`display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;@media(max-width:640px){grid-template-columns:1fr;}`
 const ToolCard = styled.div`
   border:1px solid #e2e8f0;border-radius:0.6rem;padding:0.55rem 0.65rem;background:#fafcf9;
 `
@@ -86,12 +90,10 @@ interface WebMCPHelpDialogProps {
 
 export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMCPHelpDialogProps) {
   const { locale } = useLocale()
-  const [language, setLanguage] = useState<Locale>(locale)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!open) return
-    setLanguage(locale)
     setCopied(false)
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -101,8 +103,8 @@ export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMC
   }, [locale, onClose, open])
 
   if (!open) return null
-  const ko = language === 'ko'
-  const prompt = WEBMCP_TEST_PROMPTS[language]
+  const ko = locale === 'ko'
+  const prompt = WEBMCP_TEST_PROMPTS[locale]
   const allTools = [...CORE_WEBMCP_TOOLS, ...PREVIEW_WEBMCP_TOOLS]
 
   const copyPrompt = async () => {
@@ -127,17 +129,17 @@ export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMC
           <CloseButton type="button" onClick={onClose} aria-label={ko?'닫기':'Close'}>×</CloseButton>
         </Header>
 
-        <Tabs role="tablist" aria-label="Help language">
-          <Tab type="button" role="tab" $active={language==='en'} onClick={()=>setLanguage('en')}>English</Tab>
-          <Tab type="button" role="tab" $active={language==='ko'} onClick={()=>setLanguage('ko')}>한국어</Tab>
-        </Tabs>
-
         <Body>
           <Intro>
             {ko
               ? 'WebMCP는 에이전트가 화면을 추측해서 클릭하는 대신, 이 설계 앱이 제공하는 구조화 도구를 직접 호출하게 합니다. 후보 설계는 현재 작업을 파괴하지 않으며, 사용자가 미리보기 후 적용하거나 폐기합니다.'
               : 'WebMCP lets an agent call structured tools provided by this design app instead of guessing how to click the UI. Alternatives are non-destructive: a human previews them and then applies or discards them.'}
           </Intro>
+
+          <Section>
+            <SectionTitle>{ko?'웹 ChatGPT·Claude에서 사용할 수 있나요?':'Can I use this from ChatGPT or Claude on the web?'}</SectionTitle>
+            <Intro>{WEBMCP_PLATFORM_GUIDANCE[locale]}</Intro>
+          </Section>
 
           <Section>
             <SectionTitle>{ko?'가장 빠른 테스트 — ChatGPT Desktop':'Fastest test — ChatGPT Desktop'}</SectionTitle>
@@ -170,7 +172,7 @@ export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMC
               {allTools.map((tool)=>(
                 <ToolCard key={tool}>
                   <ToolName>{tool}</ToolName>
-                  <ToolDescription>{WEBMCP_TOOL_HELP[tool][language]}</ToolDescription>
+                  <ToolDescription>{WEBMCP_TOOL_HELP[tool][locale]}</ToolDescription>
                 </ToolCard>
               ))}
             </ToolGrid>

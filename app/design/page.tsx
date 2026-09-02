@@ -37,6 +37,10 @@ const PageWrapper = styled.div`
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    @media (max-width: 900px) {
+        height: auto;
+        min-height: 100dvh;
+    }
 `
 
 const PageHeader = styled.header`
@@ -49,12 +53,23 @@ const PageHeader = styled.header`
     justify-content: space-between;
     z-index: 50;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    @media (max-width: 900px) {
+        position: sticky;
+        top: 0;
+        padding: 0.55rem 0.65rem;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
 `
 
 const HeaderLeft = styled.div`
     display: flex;
     align-items: center;
     gap: 1rem;
+    @media (max-width: 900px) {
+        width: 100%;
+        gap: 0.5rem;
+    }
 `
 
 const HeaderLogo = styled(Link)`
@@ -69,17 +84,30 @@ const HeaderDivider = styled.div`
     width: 1px;
     height: 1.25rem;
     background: #e5e7eb;
+    @media (max-width: 900px) { display: none; }
 `
 
 const PageLabel = styled.span`
     font-size: 0.875rem;
     color: #6b7280;
+    @media (max-width: 900px) {
+        margin-left: auto;
+        font-size: 0.72rem;
+    }
 `
 
 const HeaderRight = styled.div`
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    @media (max-width: 900px) {
+        width: 100%;
+        gap: 0.4rem;
+        overflow-x: auto;
+        padding-bottom: 0.1rem;
+        scrollbar-width: none;
+        &::-webkit-scrollbar { display: none; }
+    }
 `
 
 const PriceLoadingText = styled.span`
@@ -99,6 +127,7 @@ const OutlineButton = styled.button`
     cursor: pointer;
     font-weight: 500;
     transition: background 0.15s;
+    flex-shrink: 0;
 
     &:hover { background: #F0F7EF; }
 `
@@ -113,6 +142,7 @@ const PrimaryButton = styled.button`
     cursor: pointer;
     font-weight: 500;
     transition: background 0.15s;
+    flex-shrink: 0;
 
     &:hover { background: #234820; }
 `
@@ -121,6 +151,10 @@ const Body = styled.div`
     display: flex;
     flex: 1;
     min-height: 0;
+    @media (max-width: 900px) {
+        flex-direction: column;
+        min-height: auto;
+    }
 `
 
 const LeftPanel = styled.aside`
@@ -130,6 +164,12 @@ const LeftPanel = styled.aside`
     border-right: 1px solid #E8E4DC;
     overflow-y: auto;
     min-height: 0;
+    @media (max-width: 900px) {
+        width: 100%;
+        overflow: visible;
+        border-right: 0;
+        border-bottom: 1px solid #E8E4DC;
+    }
 `
 
 const CenterPanel = styled.main`
@@ -138,6 +178,12 @@ const CenterPanel = styled.main`
     flex: 1;
     min-width: 0;
     min-height: 0;
+    @media (max-width: 900px) {
+        flex: none;
+        width: 100%;
+        height: 70dvh;
+        min-height: 520px;
+    }
 `
 
 const ViewToolbar = styled.div`
@@ -148,6 +194,11 @@ const ViewToolbar = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.5rem;
+    @media (max-width: 900px) {
+        flex-wrap: wrap;
+        padding: 0.5rem 0.65rem;
+    }
 `
 
 const ViewTabs = styled.div`
@@ -178,6 +229,13 @@ const ChipsRow = styled.div`
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    @media (max-width: 900px) {
+        width: 100%;
+        order: 3;
+        overflow-x: auto;
+        padding-bottom: 0.1rem;
+        & > * { flex-shrink: 0; }
+    }
 `
 
 const Chip = styled.div`
@@ -225,6 +283,12 @@ const RightPanel = styled.aside`
     border-left: 1px solid #E8E4DC;
     overflow-y: auto;
     min-height: 0;
+    @media (max-width: 900px) {
+        width: 100%;
+        overflow: visible;
+        border-left: 0;
+        border-top: 1px solid #E8E4DC;
+    }
 `
 
 const PlaceholderWrapper = styled.div`

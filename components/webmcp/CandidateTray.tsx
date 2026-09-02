@@ -10,11 +10,12 @@ const Tray = styled.section`
   background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);
   border:1px solid #dbe7d8;border-radius:1rem;box-shadow:0 18px 45px rgba(26,46,24,0.18);
   padding:0.85rem;
+  @media(max-width:640px){left:0.45rem;right:0.45rem;bottom:0.45rem;max-height:72%;overflow-y:auto;padding:0.65rem;}
 `
-const Header = styled.div`display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;`
+const Header = styled.div`display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;gap:0.5rem;@media(max-width:640px){align-items:flex-start;flex-direction:column;}`
 const Title = styled.strong`font-size:0.8rem;color:#1A2E18;`
 const Hint = styled.span`font-size:0.68rem;color:#6b7280;`
-const Cards = styled.div`display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.6rem;`
+const Cards = styled.div`display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.6rem;@media(max-width:640px){grid-template-columns:1fr;}`
 const Card = styled.article<{ $active: boolean }>`
   min-width:0;padding:0.7rem;border-radius:0.75rem;
   border:1.5px solid ${({ $active }) => $active ? '#2D5A27' : '#e5e7eb'};
@@ -36,9 +37,10 @@ const PreviewButton = styled.button<{ $active: boolean }>`
 const ReviewBar = styled.div`
   margin-top:0.65rem;padding-top:0.65rem;border-top:1px solid #e5e7eb;
   display:flex;align-items:center;justify-content:space-between;gap:0.75rem;
+  @media(max-width:640px){align-items:stretch;flex-direction:column;}
 `
 const ReviewText = styled.div`font-size:0.68rem;color:#4b5563;min-width:0;`
-const ReviewActions = styled.div`display:flex;gap:0.4rem;flex-shrink:0;`
+const ReviewActions = styled.div`display:flex;gap:0.4rem;flex-shrink:0;@media(max-width:640px){& > button{flex:1;}}`
 const ActionButton = styled.button<{ $primary?: boolean }>`
   border:1px solid ${({ $primary }) => $primary ? '#2D5A27' : '#d1d5db'};
   background:${({ $primary }) => $primary ? '#2D5A27' : 'white'};

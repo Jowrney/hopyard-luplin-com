@@ -16,6 +16,11 @@ export const WEBMCP_TEST_PROMPTS = {
   ko: `이 페이지의 WebMCP 도구를 사용해 주세요. 먼저 현재 설계 컨텍스트를 읽으세요. 그다음 두 개의 설계 대안을 만드세요. (1) 현재 한국 프로파일을 사용하는 I자형 유인 대안, (2) 북미 18 ft 참고 프로파일 대안. 두 후보를 비교 트레이에 표시하고, 더 적합한 후보를 공유 2D/3D 캔버스에서 미리보기 하세요. 폴 수, 와이어 길이, 식재 수, 예상 비용, 안전 또는 검토 상태의 차이를 요약한 뒤 제 승인을 기다리세요. 제가 명시적으로 승인하기 전에는 후보를 적용하지 마세요.`,
 } as const
 
+export const WEBMCP_PLATFORM_GUIDANCE = {
+  en: `Ordinary ChatGPT web and Claude web chats do not directly connect to WebMCP tools in another browser tab. OpenAI Site tools are officially supported in the ChatGPT Desktop built-in browser. ChatGPT's cloud browser may automate public websites, but that is separate from WebMCP Site tools. Anthropic does not currently document WebMCP support for Claude web; Claude can only use this page through general browser automation unless a supported WebMCP browser surface is announced.`,
+  ko: `일반 ChatGPT 웹 채팅과 Claude 웹 채팅은 다른 브라우저 탭의 WebMCP 도구에 직접 연결되지 않습니다. OpenAI Site tools는 공식적으로 ChatGPT Desktop 내장 브라우저에서 지원됩니다. ChatGPT의 Cloud Browser는 공개 웹사이트를 자동 조작할 수 있지만 WebMCP Site tools와는 별개입니다. Anthropic은 현재 Claude 웹의 WebMCP 지원을 공식 안내하지 않고 있으므로, 지원되는 WebMCP 브라우저가 별도로 제공되기 전에는 일반 브라우저 자동화 방식으로만 이 페이지를 사용할 수 있습니다.`,
+} as const
+
 export const WEBMCP_TOOL_HELP = {
   get_design_context: {
     en: 'Read the active design, calculated quantities, pricing, safety, and preview state.',

@@ -41,11 +41,12 @@ const opened = await evaluate(`(() => {
 })()`)
 await wait(300)
 const english = await evaluate(`document.querySelector('[role=dialog]')?.innerText || ''`)
-const switched = await evaluate(`(() => {
-  const dialog = document.querySelector('[role=dialog]');
-  const tab = [...(dialog?.querySelectorAll('[role=tab]') ?? [])].find((node) => node.textContent?.trim() === '한국어');
-  tab?.click();
-  return Boolean(tab);
+await evaluate(`localStorage.setItem('hopeden.locale','ko'); location.reload(); true`)
+await wait(4500)
+const reopened = await evaluate(`(() => {
+  const button = [...document.querySelectorAll('button')].find((node) => node.textContent?.includes('WebMCP'));
+  button?.click();
+  return Boolean(button);
 })()`)
 await wait(300)
 const korean = await evaluate(`document.querySelector('[role=dialog]')?.innerText || ''`)
@@ -53,7 +54,8 @@ const report = {
   opened,
   englishTitle: english.includes('How to test WebMCP'),
   englishPrompt: english.includes('two design alternatives'),
-  switched,
+  chatWebGuidance: english.includes('ChatGPT web') && english.includes('Claude web'),
+  reopened,
   koreanTitle: korean.includes('WebMCP 테스트 방법'),
   koreanPrompt: korean.includes('두 개의 설계 대안'),
   toolNamesPresent: ['get_design_context','simulate_design','preview_candidate','apply_candidate','discard_preview'].every((name) => korean.includes(name)),
