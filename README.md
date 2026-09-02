@@ -90,7 +90,7 @@ npm install
 ### 2. 환경변수 설정 (인증·저장 기능 사용 시)
 ```bash
 cp .env.example .env.local
-# Supabase project URL과 anon key 입력
+# self-hosted Supabase의 anon/publishable key 입력
 ```
 
 `/design/demo` 게스트 경로는 Supabase가 없어도 bundled reference catalog로 동작합니다.

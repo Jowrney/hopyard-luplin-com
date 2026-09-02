@@ -54,6 +54,10 @@ def principled_material(name, color, metallic, roughness):
 
 galvanized = principled_material('GalvanizedSteel', (0.42, 0.47, 0.50), 0.82, 0.34)
 wood = principled_material('TreatedWood', (0.24, 0.095, 0.035), 0.0, 0.78)
+concrete = principled_material('PrecastConcrete', (0.38, 0.40, 0.39), 0.0, 0.92)
+hop_stem = principled_material('HopStem', (0.055, 0.20, 0.025), 0.0, 0.82)
+hop_leaf = principled_material('HopLeaf', (0.08, 0.34, 0.035), 0.0, 0.72)
+hop_cone = principled_material('HopCone', (0.34, 0.58, 0.08), 0.0, 0.68)
 wood_nodes = wood.node_tree.nodes
 wood_links = wood.node_tree.links
 noise = wood_nodes.new('ShaderNodeTexNoise')
@@ -97,7 +101,7 @@ def finish_mesh(obj, material, bevel=0.0):
     return obj
 
 # Korean galvanized steel pole: total 6 m, 0.9 m buried, 5.1 m exposed.
-x = -3.0
+x = -4.5
 bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.03, depth=6.0, location=(x, 0, 2.1))
 kr_pole = finish_mesh(bpy.context.object, galvanized, 0.003)
 kr_pole.name = 'KR_SteelPole_6m'
@@ -107,8 +111,58 @@ kr_pole['buried_depth_m'] = 0.9
 kr_pole['exposed_height_m'] = 5.1
 kr_pole['source'] = 'HopEden material catalog'
 
+# Korean galvanized steel pole: total 9 m, 1.5 m buried, 7.5 m exposed.
+x = -3.4
+bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.03, depth=9.0, location=(x, 0, 3.0))
+kr_steel_9m = finish_mesh(bpy.context.object, galvanized, 0.003)
+kr_steel_9m.name = 'KR_SteelPole_9m'
+set_origin(kr_steel_9m, (x, 0, 0))
+kr_steel_9m['total_length_m'] = 9.0
+kr_steel_9m['buried_depth_m'] = 1.5
+kr_steel_9m['exposed_height_m'] = 7.5
+kr_steel_9m['source'] = 'HopEden material catalog'
+
+# Korean H4 square timber poles, 6 m total and 4.9 m exposed.
+for x, section_m, name in (
+    (-2.3, 0.10, 'KR_WoodPole_100_6m'),
+    (-1.2, 0.12, 'KR_WoodPole_120_6m'),
+):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(x, 0, 1.9))
+    timber = bpy.context.object
+    timber.scale = (section_m, section_m, 6.0)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    finish_mesh(timber, wood, 0.008)
+    timber.name = name
+    set_origin(timber, (x, 0, 0))
+    timber['total_length_m'] = 6.0
+    timber['buried_depth_m'] = 1.1
+    timber['exposed_height_m'] = 4.9
+    timber['section_mm'] = int(section_m * 1000)
+    timber['source'] = 'HopEden material catalog'
+
+# Korean precast concrete utility poles.
+for x, total_m, exposed_m, base_radius, top_radius, name in (
+    (0.0, 9.0, 7.5, 0.115, 0.075, 'KR_PCPole_9m'),
+    (1.2, 12.0, 10.5, 0.135, 0.085, 'KR_PCPole_12m'),
+):
+    buried_m = total_m - exposed_m
+    bpy.ops.mesh.primitive_cone_add(
+        vertices=16,
+        radius1=base_radius,
+        radius2=top_radius,
+        depth=total_m,
+        location=(x, 0, (exposed_m - buried_m) / 2),
+    )
+    pc_pole = finish_mesh(bpy.context.object, concrete, 0.004)
+    pc_pole.name = name
+    set_origin(pc_pole, (x, 0, 0))
+    pc_pole['total_length_m'] = total_m
+    pc_pole['buried_depth_m'] = buried_m
+    pc_pole['exposed_height_m'] = exposed_m
+    pc_pole['source'] = 'HopEden material catalog'
+
 # North American wood pole: 22 ft total, 4 ft buried, 18 ft exposed.
-x = -1.5
+x = 2.5
 bpy.ops.mesh.primitive_cone_add(
     vertices=20,
     radius1=0.0889,
@@ -125,7 +179,7 @@ us_pole['exposed_height_ft'] = 18.0
 us_pole['source'] = 'Nebraska Extension EC3026'
 
 # North American 48 in ground anchor with a 6 in helical plate and eye.
-x = 0.4
+x = 3.8
 parts = []
 bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.0079375, depth=1.2192, location=(x, 0, -0.6096))
 parts.append(finish_mesh(bpy.context.object, galvanized, 0.001))
@@ -174,7 +228,7 @@ anchor['plate_diameter_in'] = 6.0
 anchor['source'] = 'Nebraska Extension EC3026'
 
 # Simplified 12 in turnbuckle oriented along local/global X.
-x = 2.1
+x = 5.0
 z = 0.35
 parts = []
 def add_horizontal_cylinder(radius, depth, center_x):
@@ -210,6 +264,82 @@ turnbuckle.name = 'US_Turnbuckle_12in'
 set_origin(turnbuckle, (x, 0, z))
 turnbuckle['length_in'] = 12.0
 turnbuckle['source'] = 'Nebraska Extension EC3026'
+
+# Hop vine master for web instancing. The local Z axis follows a training
+# string; Three.js rotates and stretches it from the hill to each top wire.
+bpy.ops.object.select_all(action='DESELECT')
+x = 6.2
+plant_parts = []
+
+def add_plant_cylinder(name, start, end, radius, material):
+    start_vector = Vector(start)
+    end_vector = Vector(end)
+    direction = end_vector - start_vector
+    midpoint = (start_vector + end_vector) * 0.5
+    bpy.ops.mesh.primitive_cylinder_add(
+        vertices=8,
+        radius=radius,
+        depth=direction.length,
+        location=midpoint,
+    )
+    obj = finish_mesh(bpy.context.object, material)
+    obj.name = name
+    obj.rotation_mode = 'QUATERNION'
+    obj.rotation_quaternion = direction.to_track_quat('Z', 'Y')
+    plant_parts.append(obj)
+    return obj
+
+vine_points = []
+for point_index in range(25):
+    z_value = point_index * 5.15 / 24
+    angle = point_index * math.pi * 0.58
+    vine_points.append((x + math.cos(angle) * 0.035, math.sin(angle) * 0.035, z_value))
+for point_index in range(len(vine_points) - 1):
+    add_plant_cylinder(
+        f'Hop_Vine_{{point_index:02d}}',
+        vine_points[point_index],
+        vine_points[point_index + 1],
+        0.022,
+        hop_stem,
+    )
+for index, height in enumerate((1.1, 1.65, 2.2, 2.75, 3.3, 3.85, 4.35, 4.75)):
+    side = -1 if index % 2 == 0 else 1
+    reach = 0.20 + 0.04 * (index % 3)
+    z_tip = height + 0.14
+    tip = (x + side * reach, 0.08 * ((index % 3) - 1), z_tip)
+    add_plant_cylinder(f'Hop_Branch_{{index:02d}}', (x, 0, height), tip, 0.014, hop_stem)
+
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=0.18, location=tip)
+    leaf = finish_mesh(bpy.context.object, hop_leaf)
+    leaf.name = f'Hop_Leaf_{{index:02d}}'
+    leaf.scale = (1.45, 0.42, 0.72)
+    leaf.rotation_euler = (0.18 * side, 0.32 * side, 0.55 * side)
+    plant_parts.append(leaf)
+
+    if height >= 2.75:
+        cone_position = (tip[0] - side * 0.09, tip[1], tip[2] - 0.17)
+        bpy.ops.mesh.primitive_cone_add(
+            vertices=8,
+            radius1=0.045,
+            radius2=0.022,
+            depth=0.13,
+            location=cone_position,
+        )
+        cone = finish_mesh(bpy.context.object, hop_cone)
+        cone.name = f'Hop_Cone_{{index:02d}}'
+        cone.rotation_euler = (0.08 * side, 0.18 * side, 0)
+        plant_parts.append(cone)
+
+for part in plant_parts:
+    part.select_set(True)
+bpy.context.view_layer.objects.active = plant_parts[0]
+bpy.ops.object.join()
+hop_plant = plant_parts[0]
+hop_plant.name = 'Hop_Vine_Segment'
+set_origin(hop_plant, (x, 0, 0))
+hop_plant['nominal_height_m'] = 5.15
+hop_plant['asset_role'] = 'web-instanced vine aligned to a training string'
+hop_plant['source'] = 'Original HopEden BlenderMCP asset'
 
 # Apply transforms while preserving named object origins.
 for obj in base_collection.objects:
@@ -267,7 +397,11 @@ async def main() -> None:
                 await session.call_tool("disable_telemetry", {})
             result = await session.call_tool("execute_blender_code", {"code": BLENDER_CODE})
             print(json.dumps(result.model_dump(), ensure_ascii=False, indent=2, default=str))
-            if getattr(result, "isError", False):
+            text_results = [
+                str(getattr(item, "text", "")) for item in result.content
+                if getattr(item, "type", None) == "text"
+            ]
+            if getattr(result, "isError", False) or any(text.startswith("Error executing code:") for text in text_results):
                 raise RuntimeError("BlenderMCP returned an error")
 
 

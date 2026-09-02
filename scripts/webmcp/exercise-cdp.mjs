@@ -3,6 +3,10 @@
 const port = process.argv[2] ?? '9333'
 const previewUS = process.argv.includes('--preview-us')
 const keepPreview = process.argv.includes('--keep-preview')
+const option = (name) => process.argv.find((value) => value.startsWith(`${name}=`))?.slice(name.length + 1)
+const trainingType = option('--training') ?? 'I'
+const poleCode = option('--pole')
+const poleHeight = option('--pole-height')
 const pages = await fetch(`http://127.0.0.1:${port}/json`).then((response) => response.json())
 const page = pages.find((candidate) => candidate.type === 'page' && candidate.url.includes('/design/demo'))
 if (!page) throw new Error('The /design/demo page is not open in the target Chrome instance.')
@@ -41,9 +45,12 @@ function waitForEvent(method, predicate) {
 }
 
 const unwrap = (output) => {
+  if (typeof output === 'string') {
+    try { return unwrap(JSON.parse(output)) } catch { return output }
+  }
   const text = output?.content?.find((item) => item.type === 'text')?.text
   if (!text) return output
-  try { return JSON.parse(text) } catch { return text }
+  try { return unwrap(JSON.parse(text)) } catch { return text }
 }
 
 await call('WebMCP.enable')
@@ -73,9 +80,11 @@ async function toolNames() {
 
 const initialTools = await toolNames()
 const economy = await invoke('simulate_design', {
-  label: 'Economy I training',
-  rationale: 'Use one support line per plant while preserving the site dimensions.',
-  trainingType: 'I',
+  label: `Training ${trainingType} · ${poleCode ?? 'current pole'}`,
+  rationale: 'Visual verification candidate for training direction and selected pole asset.',
+  trainingType,
+  ...(poleCode ? { poleCode } : {}),
+  ...(poleHeight ? { poleEffectiveHeightM: Number(poleHeight) } : {}),
 })
 const northAmerica = await invoke('simulate_design', {
   label: 'North America reference',
@@ -88,6 +97,7 @@ const shown = await invoke('show_candidates', {
 const previewTarget = previewUS ? northAmerica : economy
 const preview = await invoke('preview_candidate', { candidateId: previewTarget.candidateId })
 await new Promise((resolve) => setTimeout(resolve, 100))
+const contextAfterPreview = await invoke('get_design_context')
 const previewTools = await toolNames()
 const discarded = keepPreview ? null : await invoke('discard_preview')
 if (!keepPreview) await new Promise((resolve) => setTimeout(resolve, 100))
@@ -107,6 +117,7 @@ console.log(JSON.stringify({
   northAmerica,
   shown,
   preview: { status: preview.status, candidateId: preview.candidateId },
+  contextAfterPreview,
   previewTools,
   discarded,
   finalTools,

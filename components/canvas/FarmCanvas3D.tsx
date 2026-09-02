@@ -1,10 +1,12 @@
 // components/canvas/FarmCanvas3D.tsx
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type * as THREETypes from 'three'
 import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
+import { getPoleAssetLabel, getPoleAssetName } from '@/lib/design/pole-assets'
+import { getTrainingWireOffsets } from '@/lib/design/training-geometry'
 
 const CanvasWrapper = styled.div`width:100%;height:100%;position:relative;`
 
@@ -29,6 +31,12 @@ const TopLabel = styled.div`
   backdrop-filter:blur(4px);border:1px solid #e5e7eb;border-radius:0.5rem;
   padding:0.25rem 0.625rem;font-size:0.75rem;color:#2D5A27;
   font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,0.08);pointer-events:none;
+  display:flex;align-items:center;gap:0.5rem;
+`
+const AssetStatus = styled.span<{$loaded:boolean}>`
+  font-size:0.62rem;font-weight:700;padding:0.12rem 0.35rem;border-radius:999px;
+  color:${({$loaded})=>$loaded?'#166534':'#92400e'};
+  background:${({$loaded})=>$loaded?'#dcfce7':'#fef3c7'};
 `
 
 export function FarmCanvas3D() {
@@ -38,8 +46,9 @@ export function FarmCanvas3D() {
   const sceneRef     = useRef<unknown>(null)
   const animIdRef    = useRef(0)
   const readyRef     = useRef(false)
-  const assetKitRef  = useRef<Map<string, THREETypes.Mesh> | null>(null)
-  const {inputs, quantities, profileId} = useDesignStore()
+  const assetKitRef  = useRef<Map<string, THREETypes.Object3D> | null>(null)
+  const [assetStatus,setAssetStatus] = useState('Loading Blender GLB…')
+  const {inputs, quantities, profileId, selectedPoleCode} = useDesignStore()
 
   useEffect(()=>{
     const container = containerRef.current; if(!container) return
@@ -57,7 +66,10 @@ export function FarmCanvas3D() {
       container.appendChild(renderer.domElement);rendererRef.current=renderer
       const camera=new THREE.PerspectiveCamera(50,container.clientWidth/container.clientHeight,0.1,1000)
       cameraRef.current=camera
-      const W=inputs.widthM,H=inputs.heightM,r=Math.max(W,H)*1.4
+      const W=inputs.widthM,H=inputs.heightM
+      const viewportAspect=container.clientWidth/container.clientHeight
+      const aspectFit=Math.min(1.3,Math.max(1,Math.sqrt(0.85/viewportAspect)))
+      const r=Math.max(W,H)*1.4*aspectFit
       camera.position.set(W/2+r*0.6,r*0.45,H/2+r*0.6);camera.lookAt(W/2,0,H/2)
       let theta=Math.atan2(camera.position.x-W/2,camera.position.z-H/2),phi=Math.PI/4,radius=r
       const tgt={x:W/2,y:0,z:H/2}
@@ -110,9 +122,9 @@ export function FarmCanvas3D() {
         try {
           const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
           const gltf = await new GLTFLoader().loadAsync('/models/hopyard-asset-kit.glb')
-          const assets = new Map<string, THREETypes.Mesh>()
+          const assets = new Map<string, THREETypes.Object3D>()
           gltf.scene.traverse(object => {
-            if ((object as THREETypes.Mesh).isMesh) assets.set(object.name, object as THREETypes.Mesh)
+            if (object.name) assets.set(object.name, object)
           })
           assetKitRef.current = assets
         } catch (error) {
@@ -120,11 +132,25 @@ export function FarmCanvas3D() {
           assetKitRef.current = new Map()
         }
       }
-      const poleAssetName = profileId === 'US_HIGH_TRELLIS' ? 'US_WoodPole_22ft' : 'KR_SteelPole_6m'
-      const poleTemplate = assetKitRef.current.get(poleAssetName)
+      const poleAssetName = getPoleAssetName(selectedPoleCode,profileId)
+      const poleTemplate = assetKitRef.current.get(poleAssetName) as THREETypes.Mesh | undefined
       const anchorTemplate = profileId === 'US_HIGH_TRELLIS'
-        ? assetKitRef.current.get('US_HelixAnchor_48in')
+        ? assetKitRef.current.get('US_HelixAnchor_48in') as THREETypes.Mesh | undefined
         : undefined
+      const turnbuckleTemplate = assetKitRef.current.get('US_Turnbuckle_12in') as THREETypes.Mesh | undefined
+      const vineRoot = assetKitRef.current.get('Hop_Vine_Segment')
+      const vineTemplates:THREETypes.Mesh[]=[]
+      vineRoot?.traverse(object=>{ if((object as THREETypes.Mesh).isMesh) vineTemplates.push(object as THREETypes.Mesh) })
+      const masterNames=[
+        'KR_SteelPole_6m','KR_SteelPole_9m','KR_WoodPole_100_6m','KR_WoodPole_120_6m',
+        'KR_PCPole_9m','KR_PCPole_12m','US_WoodPole_22ft','US_HelixAnchor_48in',
+        'US_Turnbuckle_12in','Hop_Vine_Segment',
+      ]
+      const loadedMasterCount=masterNames.filter(name=>assetKitRef.current?.has(name)).length
+      const blenderAssetsLoaded=loadedMasterCount===masterNames.length
+      setAssetStatus(blenderAssetsLoaded?`Blender GLB · ${loadedMasterCount} assets`:'Procedural fallback')
+      const activeRenderer=rendererRef.current as THREETypes.WebGLRenderer | null
+      if(activeRenderer) activeRenderer.domElement.dataset.assetKit=blenderAssetsLoaded?`blender-glb:${loadedMasterCount}`:'procedural-fallback'
       const scene = new THREE.Scene()
       scene.background=new THREE.Color(0xDCEDDC)
       scene.fog=new THREE.Fog(0xCCE4CC,120,400)
@@ -226,6 +252,18 @@ export function FarmCanvas3D() {
         rg.position.set(x,0.1,z);rg.rotation.x=Math.PI/2;scene.add(rg)
         return {x,y:0.1,z}
       }
+      const addTurnbuckle=(anchor:{x:number;y:number;z:number},top:Top)=>{
+        if(!turnbuckleTemplate)return
+        const start=new THREE.Vector3(anchor.x,anchor.y,anchor.z)
+        const direction=new THREE.Vector3(top.tx-anchor.x,top.ty-anchor.y,top.tz-anchor.z)
+        const unit=direction.clone().normalize()
+        const hardware=new THREE.Mesh(turnbuckleTemplate.geometry,turnbuckleTemplate.material)
+        hardware.position.copy(start.add(unit.clone().multiplyScalar(0.28)))
+        hardware.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),unit)
+        hardware.castShadow=true
+        hardware.name='US_Turnbuckle_Installed'
+        scene.add(hardware)
+      }
 
       const TILT=0.2
       interface Top{tx:number,ty:number,tz:number}
@@ -306,15 +344,15 @@ export function FarmCanvas3D() {
         const mz=mastZs[ci]; if(mz>lastMastZ+0.01) break
         const lTop=masts.find(m=>m.ri===0&&Math.abs(m.cz_-mz)<0.01)?.top
         const rTop=masts.find(m=>m.rx===mastXs[mastXs.length-1]&&Math.abs(m.cz_-mz)<0.01)?.top
-        if(lTop){ const a=addOuterAnchor(-anchorDist,mz); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(lTop.tx,lTop.ty,lTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
-        if(rTop){ const a=addOuterAnchor(lastMastX+anchorDist,mz); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(rTop.tx,rTop.ty,rTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
+        if(lTop){ const a=addOuterAnchor(-anchorDist,mz); addTurnbuckle(a,lTop); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(lTop.tx,lTop.ty,lTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
+        if(rTop){ const a=addOuterAnchor(lastMastX+anchorDist,mz); addTurnbuckle(a,rTop); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(rTop.tx,rTop.ty,rTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
       }
       for(let ri=0;ri<mastXs.length;ri++){
         const mx=mastXs[ri]; if(mx>lastMastX+0.01) break
         const fTop=masts.find(m=>Math.abs(m.rx-mx)<0.01&&m.ci===0)?.top
         const bTop=masts.find(m=>Math.abs(m.rx-mx)<0.01&&m.cz_===mastZs[mastZs.length-1])?.top
-        if(fTop){ const a=addOuterAnchor(mx,-anchorDist); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(fTop.tx,fTop.ty,fTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
-        if(bTop){ const a=addOuterAnchor(mx,lastMastZ+anchorDist); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(bTop.tx,bTop.ty,bTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
+        if(fTop){ const a=addOuterAnchor(mx,-anchorDist); addTurnbuckle(a,fTop); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(fTop.tx,fTop.ty,fTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
+        if(bTop){ const a=addOuterAnchor(mx,lastMastZ+anchorDist); addTurnbuckle(a,bTop); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(bTop.tx,bTop.ty,bTop.tz),new THREE.Vector3(a.x,a.y,a.z)]),ancWire)) }
       }
 
       // ── 상단 메인 와이어 ──────────────────────────
@@ -341,16 +379,7 @@ export function FarmCanvas3D() {
         const isFirst=mastIdx===0
         const isLast=isMast&&(mastIdx===mastXs.length-1||(mastXs[mastIdx+1]??999)>lastMastX+0.01)
 
-        const wireOffsets:number[]=[]
-        if(IS_I_TYPE){
-          // I자형: 두둑 중앙 1줄만
-          wireOffsets.push(0)
-        } else {
-          // V자형
-          if(isFirst)      wireOffsets.push(0, +WIRE_OFF)
-          else if(isLast)  wireOffsets.push(-WIRE_OFF, 0)
-          else             wireOffsets.push(-WIRE_OFF, +WIRE_OFF)
-        }
+        const wireOffsets=getTrainingWireOffsets(inputs.trainingType,isFirst,isLast,WIRE_OFF)
 
         // 인접 마스트 찾기 (높이 보간용)
         const leftMastX =mastXs.filter(mx=>mx<=ridgeX).at(-1)??mastXs[0]
@@ -376,6 +405,8 @@ export function FarmCanvas3D() {
       // ── 홉 & V자 유인줄 ──────────────────────────
       // 두둑마다, 마스트 구간(Z)마다 홉 배치
       // 유인줄: 홉 → 해당 두둑의 좌우 보조 유인 와이어로 V자 연결
+      const vineTransforms:{position:THREETypes.Vector3;quaternion:THREETypes.Quaternion;scale:THREETypes.Vector3}[]=[]
+      const vineNominalHeight=Number(vineRoot?.userData.nominal_height_m ?? 5.15)
       for(const ridgeX of ridgeXs){
         if(ridgeX>lastMastX+0.01) break
 
@@ -386,19 +417,8 @@ export function FarmCanvas3D() {
         const isLast=isMast&&(mastIdx===mastXs.length-1||(mastXs[mastIdx+1]??999)>lastMastX+0.01)
 
         // 유인줄 거치 X 위치 (보조 와이어와 동일 로직)
-        const mastIdx2=mastXs.findIndex(mx=>Math.abs(mx-ridgeX)<0.01)
-        const isFirst2=mastIdx2===0
-        const isLast2=mastIdx2>=0&&(mastIdx2===mastXs.length-1||(mastXs[mastIdx2+1]??999)>lastMastX+0.01)
-        const wireXsRaw:number[]=[]
-        if(IS_I_TYPE){
-          // I자형: 두둑 중앙 1줄 → 유인줄도 1줄
-          wireXsRaw.push(ridgeX)
-        } else {
-          // V자형
-          if(isFirst2)     wireXsRaw.push(ridgeX, ridgeX+WIRE_OFF)
-          else if(isLast2) wireXsRaw.push(ridgeX-WIRE_OFF, ridgeX)
-          else             wireXsRaw.push(ridgeX-WIRE_OFF, ridgeX+WIRE_OFF)
-        }
+        const wireXsRaw=getTrainingWireOffsets(inputs.trainingType,isFirst,isLast,WIRE_OFF)
+          .map(offset=>ridgeX+offset)
         const validWireXs=wireXsRaw.filter(wx=>wx>=0&&wx<=lastMastX)
 
         // 높이 보간용 인접 마스트
@@ -417,13 +437,16 @@ export function FarmCanvas3D() {
           const totalHops=ridgeXs.filter(rx=>rx<=lastMastX+0.01).length*(mastZs.length-1)*hopZs.length
           const skipHop=totalHops>3000
           for(const hz of hopZs){
-            // 홉 식물
             if(skipHop) continue
-            const hopH=0.25+Math.random()*0.15
-            const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.04,hopH,6),stemMat)
-            stem.position.set(ridgeX,hopH/2,hz);stem.castShadow=true;scene.add(stem)
-            const ball=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,6),hopMat)
-            ball.position.set(ridgeX,hopH+0.05,hz);ball.castShadow=true;scene.add(ball)
+            const seed=((Math.round(ridgeX*100)*73856093)^(Math.round(hz*100)*19349663))>>>0
+            const variation=0.88+(seed%17)/100
+            if(vineTemplates.length===0){
+              const hopH=0.3
+              const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.04,hopH,6),stemMat)
+              stem.position.set(ridgeX,hopH/2,hz);stem.castShadow=true;scene.add(stem)
+              const ball=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,6),hopMat)
+              ball.position.set(ridgeX,hopH+0.05,hz);ball.castShadow=true;scene.add(ball)
+            }
 
             // 이 z 위치에서 보조 와이어 높이 보간
             const tZ=(hz-z0)/POLE_SPACING
@@ -438,15 +461,43 @@ export function FarmCanvas3D() {
             // 이 두둑 위치에서의 보조 와이어 높이 (좌우 마스트 보간)
             const wireWy=lWy*(1-tX)+rWy*tX
 
-            const hopTop=new THREE.Vector3(ridgeX,hopH+0.05,hz)
+            const vineBase=new THREE.Vector3(ridgeX,0.08,hz)
 
-            // V자 유인줄 — 홉 → 해당 두둑의 유인 와이어로
+            // I형은 중앙 수직 1줄, V형은 좌우 상부 와이어로 경사진 2줄
             for(const wx of validWireXs){
               const target=new THREE.Vector3(wx,wireWy,hz)
-              scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([hopTop,target]),yarnMat))
+              scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([vineBase,target]),yarnMat))
+              if(vineTemplates.length>0){
+                const direction=target.clone().sub(vineBase)
+                const length=direction.length()
+                vineTransforms.push({
+                  position:vineBase.clone(),
+                  quaternion:new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize()),
+                  scale:new THREE.Vector3(0.48*variation,length/vineNominalHeight,0.48*variation),
+                })
+              }
             }
           }
         }
+      }
+      if(vineTemplates.length>0&&vineTransforms.length>0){
+        vineTemplates.forEach((template,templateIndex)=>{
+          const vines=new THREE.InstancedMesh(template.geometry,template.material,vineTransforms.length)
+          const matrix=new THREE.Matrix4()
+          vineTransforms.forEach((transform,index)=>{
+            matrix.compose(transform.position,transform.quaternion,transform.scale)
+            vines.setMatrixAt(index,matrix)
+          })
+          vines.instanceMatrix.needsUpdate=true
+          vines.castShadow=true
+          vines.name=`Hop_Vine_Segment_${templateIndex}_Instances`
+          scene.add(vines)
+        })
+      }
+      if(activeRenderer){
+        activeRenderer.domElement.dataset.poleAsset=poleAssetName
+        activeRenderer.domElement.dataset.trainingType=inputs.trainingType
+        activeRenderer.domElement.dataset.vineInstances=String(vineTransforms.length)
       }
 
       // ── 격자 ──────────────────────────────────────
@@ -456,13 +507,17 @@ export function FarmCanvas3D() {
       gm.opacity=0.2;gm.transparent=true;scene.add(grid)
     }
     build()
-  },[inputs,quantities,profileId])
+  },[inputs,quantities,profileId,selectedPoleCode])
 
   return (
     <CanvasWrapper ref={containerRef}>
       <BottomHint>🖱️ 드래그 — 회전 &nbsp;|&nbsp; 방향키 — 이동 &nbsp;|&nbsp; 휠 — 줌</BottomHint>
       <TopLabel>
-        🌿 {profileId === 'US_HIGH_TRELLIS' ? 'North America 18 ft reference' : 'Korea steel trellis'}
+        <span>
+          🌿 {profileId === 'US_HIGH_TRELLIS' ? 'North America reference' : 'Korea'} ·{' '}
+          {getPoleAssetLabel(selectedPoleCode,profileId)} · {inputs.trainingType}-training
+        </span>
+        <AssetStatus $loaded={assetStatus.startsWith('Blender')}>{assetStatus}</AssetStatus>
       </TopLabel>
     </CanvasWrapper>
   )
