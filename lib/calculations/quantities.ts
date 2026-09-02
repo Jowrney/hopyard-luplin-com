@@ -10,8 +10,8 @@ export function calculateQuantities(inputs: DesignInputs): QuantityResult {
     rowSpacingM: _rs,
     plantSpacingM: _ps,
     poleSpacingM: _poleS,
-    wireRows,
     poleEffectiveHeightM,
+    trainingType,
   } = inputs
 
   // 안전 범위 클램핑 — 0이나 극단값 방지
@@ -66,18 +66,16 @@ export function calculateQuantities(inputs: DesignInputs): QuantityResult {
     mastColCount * lastMastX +   // Z 방향 연결 (열)
     mastRowCount * lastMastZ     // X 방향 연결 (행)
 
-  // 보조 유인 와이어:
-  // 각 두둑마다 2줄(±80cm), 세로 방향(lastMastZ 길이)
-  // 첫/끝 마스트: 메인(0) + ±80cm = 2줄
-  // 나머지: ±80cm = 2줄
-  const subWirePerRidge = 2
+  // 보조 유인 와이어: I자형은 두둑 중앙 1줄, V자형은 좌우 2줄
+  const subWirePerRidge = trainingType === 'I' ? 1 : 2
   const subWireM = ridgeCount * subWirePerRidge * lastMastZ
 
   // 앵커 와이어: 각 외곽 마스트에서 바깥 앵커로
   const anchorWireM = outerPoleCount * MAST_SPAN * 0.4 * 1.2 // 앵커 거리 × 여유
 
-  // 유인줄 (yarn): 홉당 2줄 × 폴 유효 높이 × 여유
-  const yarnWireM = plantCount * 2 * poleEffectiveHeightM * 1.1
+  // 유인줄 (yarn): I자형은 홉당 1줄, V자형은 홉당 2줄
+  const twinesPerPlant = trainingType === 'I' ? 1 : 2
+  const yarnWireM = plantCount * twinesPerPlant * poleEffectiveHeightM * 1.1
 
   const WIRE_MARGIN = 1.05
   const horizontalWireM = Math.ceil((mainWireM + subWireM + anchorWireM) * WIRE_MARGIN)

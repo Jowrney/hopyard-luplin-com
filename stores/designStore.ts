@@ -5,6 +5,7 @@ import { calculateQuantities } from '@/lib/calculations/quantities'
 import { calculateLoad } from '@/lib/calculations/loads'
 import { calculateEstimate } from '@/lib/calculations/estimate'
 import type { DesignInputs, EstimateResult, LoadResult, QuantityResult, WindRegion, TrainingType } from '@/types'
+import { getRegionalProfile, type RegionalProfileId } from '@/lib/design/regional-profiles'
 
 export interface LaborCosts {
   laborFee:     number  // 인건비 (원)
@@ -39,6 +40,7 @@ const DEFAULT_INPUTS: DesignInputs = {
 }
 
 interface DesignStore {
+  profileId: RegionalProfileId
   inputs: DesignInputs
   selectedPoleCode: string
   selectedWireCode: string
@@ -77,6 +79,7 @@ interface DesignStore {
 export const useDesignStore = create<DesignStore>()(
   devtools(
     (set, get) => ({
+      profileId: 'KR_STEEL_V',
       inputs: DEFAULT_INPUTS,
       selectedPoleCode: 'POLE_STEEL_60_2T_6M',
       selectedWireCode: 'WIRE_32MM',
@@ -132,8 +135,11 @@ export const useDesignStore = create<DesignStore>()(
         set({ isCalculating: true })
         try {
           const quantities = calculateQuantities(state.inputs)
-          const loads = calculateLoad(state.inputs, quantities, state.selectedWireCode)
-          const estimate = calculateEstimate({
+          const profile = getRegionalProfile(state.profileId)
+          const loads = profile.loadModel === 'kr-preliminary'
+            ? calculateLoad(state.inputs, quantities, state.selectedWireCode)
+            : null
+          const estimate = profile.pricing.status === 'live-catalog' ? calculateEstimate({
             quantities, prices,
             poleCode: state.selectedPoleCode,
             wireCode: state.selectedWireCode,
@@ -146,7 +152,7 @@ export const useDesignStore = create<DesignStore>()(
             discountAmount: state.discountAmount,
             seedTotal: state.varietySeedInfo.seedTotal > 0 ? state.varietySeedInfo.seedTotal : undefined,
             totalVarietyQty: state.varietySeedInfo.totalVarietyQty > 0 ? state.varietySeedInfo.totalVarietyQty : undefined,
-          })
+          }) : null
           set({ quantities, loads, estimate, isCalculating: false })
         } catch (error) {
           console.error('계산 오류:', error)
@@ -164,6 +170,7 @@ export const useDesignStore = create<DesignStore>()(
 
       reset: () => {
         set({
+          profileId: 'KR_STEEL_V',
           inputs: DEFAULT_INPUTS,
           selectedPoleCode: 'POLE_STEEL_60_2T_6M', selectedWireCode: 'WIRE_32MM',
           selectedAnchorCode: 'ANCHOR_SCREW_600',  selectedVarietyCode: 'HOP_CASCADE',

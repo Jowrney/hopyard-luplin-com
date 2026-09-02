@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import styled from 'styled-components'
 import { DesignInputForm } from '@/components/design/DesignInputForm'
 import { EstimatePanel } from '@/components/estimate/EstimatePanel'
@@ -12,6 +13,8 @@ import { SaveDesignModal } from '@/components/design/SaveDesignModal'
 import { useDesignStore } from '@/stores/designStore'
 import { usePriceStore } from '@/stores/priceStore'
 import UserMenu from '@/components/auth/UserMenu'
+import { CandidateTray } from '@/components/webmcp/CandidateTray'
+import { DesignWebMCP } from '@/components/webmcp/DesignWebMCP'
 import { createClient } from '@/lib/supabase/client'
 
 // ── 동적 임포트 ───────────────────────────────────────
@@ -265,6 +268,8 @@ function CanvasPlaceholder({ text, icon = '🗺️' }: { text: string; icon?: st
 }
 
 export default function DesignPage() {
+  const pathname = usePathname()
+  const isDemo = pathname === '/design/demo'
   const { quantities, inputs, recalculate } = useDesignStore()
   const { fetchPrices, isLoading: pricesLoading } = usePriceStore()
   const [viewMode, setViewMode] = useState<ViewMode>('2d')
@@ -327,6 +332,8 @@ export default function DesignPage() {
       if (!quantities) recalculate()
     })
 
+    if (isDemo) return
+
     // Supabase 세션에서 유저 정보 가져오기
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -335,7 +342,7 @@ export default function DesignPage() {
         setUserEmail(user.email)
       }
     })
-  }, [fetchPrices]) // eslint-disable-line
+  }, [fetchPrices, isDemo]) // eslint-disable-line
 
   return (
     <PageWrapper>
@@ -347,15 +354,16 @@ export default function DesignPage() {
             <LogoSub>Designer</LogoSub>
           </HeaderLogo>
           <HeaderDivider />
-          <PageLabel>새 설계안</PageLabel>
+          <PageLabel>{isDemo ? 'WebMCP Challenge Demo' : '새 설계안'}</PageLabel>
         </HeaderLeft>
 
         <HeaderRight>
+          <DesignWebMCP />
           <SafetyBadge />
           {pricesLoading && <PriceLoadingText>가격 로드 중…</PriceLoadingText>}
           <OutlineButton onClick={() => setShowPDF(true)}>📄 견적서 PDF</OutlineButton>
-          <PrimaryButton onClick={() => setShowSave(true)}>💾 설계 저장</PrimaryButton>
-          <UserMenu userName={userName} userEmail={userEmail} />
+          {!isDemo && <PrimaryButton onClick={() => setShowSave(true)}>💾 설계 저장</PrimaryButton>}
+          {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
         </HeaderRight>
       </PageHeader>
 
@@ -389,6 +397,7 @@ export default function DesignPage() {
           <CanvasArea ref={canvasAreaRef}>
             <CanvasLayer $visible={viewMode === '2d'}><FarmCanvas2D /></CanvasLayer>
             <CanvasLayer $visible={viewMode === '3d'}><FarmCanvas3D /></CanvasLayer>
+            <CandidateTray />
           </CanvasArea>
         </CenterPanel>
 

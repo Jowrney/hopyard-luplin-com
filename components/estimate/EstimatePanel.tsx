@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
 import { formatKRW } from '@/lib/calculations/estimate'
 import type { EstimateLineItem, SafetyStatus } from '@/types'
+import { getRegionalProfile, type MaterialRole } from '@/lib/design/regional-profiles'
 
 // ── 스타일 ──────────────────────────────────────────
 const PanelWrapper = styled.div`
@@ -252,6 +253,32 @@ const EmptyState = styled.div`
 const EmptyIcon = styled.p`font-size: 2.5rem; margin-bottom: 0.75rem;`
 const EmptyText = styled.p`font-size: 0.875rem; line-height: 1.5;`
 
+const ReferenceCard = styled.div`
+    border:1px solid #c7d9c3;border-radius:1rem;overflow:hidden;background:#F8FAF7;
+`
+const ReferenceHeader = styled.div`
+    padding:0.85rem 1rem;background:#2D5A27;color:white;
+`
+const ReferenceTitle = styled.div`font-size:0.85rem;font-weight:700;`
+const ReferenceSub = styled.div`font-size:0.65rem;opacity:0.75;margin-top:0.2rem;line-height:1.35;`
+const ReferenceList = styled.div`display:flex;flex-direction:column;`
+const ReferenceItem = styled.div`
+    padding:0.65rem 0.8rem;border-top:1px solid #e5e7eb;background:white;
+`
+const ReferenceItemTop = styled.div`display:flex;align-items:center;justify-content:space-between;gap:0.5rem;`
+const ReferenceName = styled.strong`font-size:0.72rem;color:#1A2E18;`
+const ReferenceQty = styled.span`font-size:0.64rem;font-weight:700;color:#2D5A27;white-space:nowrap;`
+const ReferenceSpec = styled.div`font-size:0.62rem;color:#6b7280;line-height:1.35;margin-top:0.2rem;`
+const ReferenceSource = styled.a`
+    display:block;padding:0.7rem 0.8rem;border-top:1px solid #e5e7eb;
+    color:#2D5A27;font-size:0.62rem;text-decoration:none;background:#F0F7EF;
+    &:hover{text-decoration:underline;}
+`
+const ReferenceWarning = styled.div`
+    padding:0.7rem 0.8rem;border-top:1px solid #fde68a;background:#fffbeb;
+    color:#92400e;font-size:0.62rem;line-height:1.4;
+`
+
 // ── 상수 ──────────────────────────────────────────────
 const CAT_COLORS: Record<string, string> = {
   '자재비': '#3b82f6',
@@ -267,12 +294,23 @@ const SAFETY_LABEL: Record<SafetyStatus, string> = {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────
 export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
-  const { estimate, quantities, loads, isCalculating, discountMemo } = useDesignStore()
+  const { profileId, inputs, estimate, quantities, loads, isCalculating, discountMemo } = useDesignStore()
+  const activeProfile = getRegionalProfile(profileId)
+  const referenceQuantity = (role: MaterialRole) => {
+    if (!quantities) return ''
+    if (role === 'pole') return `${quantities.totalPoleCount.toLocaleString()} each`
+    if (role === 'anchor' || role === 'hardware') return `${quantities.anchorCount.toLocaleString()} each`
+    if (role === 'twine') {
+      const count = quantities.plantCount * (inputs.trainingType === 'V' ? 2 : 1)
+      return `${count.toLocaleString()} strings`
+    }
+    return `part of ${quantities.totalWireM.toLocaleString()} m system`
+  }
 
   return (
     <PanelWrapper>
       <PanelHeader>
-        <PanelTitle>실시간 견적</PanelTitle>
+        <PanelTitle>{activeProfile.pricing.status === 'reference-only' ? 'Reference BOM' : '실시간 견적'}</PanelTitle>
         {isCalculating && <CalcText>계산 중…</CalcText>}
       </PanelHeader>
 
@@ -426,6 +464,30 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
 
             <OutlineBtn onClick={onPDFClick}>📄 견적서 PDF 출력</OutlineBtn>
           </>
+        ) : activeProfile.pricing.status === 'reference-only' && quantities ? (
+          <ReferenceCard>
+            <ReferenceHeader>
+              <ReferenceTitle>{activeProfile.name}</ReferenceTitle>
+              <ReferenceSub>{activeProfile.description}</ReferenceSub>
+            </ReferenceHeader>
+            <ReferenceList>
+              {activeProfile.materials.map((material) => (
+                <ReferenceItem key={material.code}>
+                  <ReferenceItemTop>
+                    <ReferenceName>{material.name}</ReferenceName>
+                    <ReferenceQty>{referenceQuantity(material.role)}</ReferenceQty>
+                  </ReferenceItemTop>
+                  <ReferenceSpec>{material.specification}</ReferenceSpec>
+                </ReferenceItem>
+              ))}
+            </ReferenceList>
+            {activeProfile.sources.map((source) => (
+              <ReferenceSource key={source.url} href={source.url} target="_blank" rel="noreferrer">
+                Source: {source.label} ↗
+              </ReferenceSource>
+            ))}
+            <ReferenceWarning>{activeProfile.engineeringDisclaimer}</ReferenceWarning>
+          </ReferenceCard>
         ) : (
           <EmptyState>
             <EmptyIcon>💰</EmptyIcon>

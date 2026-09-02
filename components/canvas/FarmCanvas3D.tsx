@@ -38,7 +38,8 @@ export function FarmCanvas3D() {
   const sceneRef     = useRef<unknown>(null)
   const animIdRef    = useRef(0)
   const readyRef     = useRef(false)
-  const {inputs, quantities} = useDesignStore()
+  const assetKitRef  = useRef<Map<string, THREETypes.Mesh> | null>(null)
+  const {inputs, quantities, profileId} = useDesignStore()
 
   useEffect(()=>{
     const container = containerRef.current; if(!container) return
@@ -105,6 +106,25 @@ export function FarmCanvas3D() {
     const build = async ()=>{
       await new Promise<void>(resolve=>{ const check=()=>readyRef.current?resolve():setTimeout(check,50);check() })
       const THREE = await import('three')
+      if (!assetKitRef.current) {
+        try {
+          const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
+          const gltf = await new GLTFLoader().loadAsync('/models/hopyard-asset-kit.glb')
+          const assets = new Map<string, THREETypes.Mesh>()
+          gltf.scene.traverse(object => {
+            if ((object as THREETypes.Mesh).isMesh) assets.set(object.name, object as THREETypes.Mesh)
+          })
+          assetKitRef.current = assets
+        } catch (error) {
+          console.warn('Blender asset kit unavailable; using procedural fallback.', error)
+          assetKitRef.current = new Map()
+        }
+      }
+      const poleAssetName = profileId === 'US_HIGH_TRELLIS' ? 'US_WoodPole_22ft' : 'KR_SteelPole_6m'
+      const poleTemplate = assetKitRef.current.get(poleAssetName)
+      const anchorTemplate = profileId === 'US_HIGH_TRELLIS'
+        ? assetKitRef.current.get('US_HelixAnchor_48in')
+        : undefined
       const scene = new THREE.Scene()
       scene.background=new THREE.Color(0xDCEDDC)
       scene.fog=new THREE.Fog(0xCCE4CC,120,400)
@@ -172,7 +192,7 @@ export function FarmCanvas3D() {
       }
 
       // ── 재질 ──────────────────────────────────────
-      const mastMat  = new THREE.MeshStandardMaterial({color:0x1A1A1A,metalness:0.75,roughness:0.25})
+      const mastMat  = poleTemplate?.material ?? new THREE.MeshStandardMaterial({color:0x1A1A1A,metalness:0.75,roughness:0.25})
       const plateMat = new THREE.MeshStandardMaterial({color:0xCC0000,metalness:0.5,roughness:0.4})
       const concMat  = new THREE.MeshLambertMaterial({color:0xBDBDBD})
       const capMat   = new THREE.MeshStandardMaterial({color:0x424242,metalness:0.8,roughness:0.2})
@@ -191,6 +211,11 @@ export function FarmCanvas3D() {
         p.position.set(x,0.08,z);scene.add(p)
       }
       const addOuterAnchor=(x:number,z:number)=>{
+        if(anchorTemplate){
+          const anchor=new THREE.Mesh(anchorTemplate.geometry,anchorTemplate.material)
+          anchor.position.set(x,0,z);anchor.castShadow=true;scene.add(anchor)
+          return {x,y:0.1,z}
+        }
         const c=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.2,0.06,8),concMat)
         c.position.set(x,0.03,z);scene.add(c)
         const p=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.04,8),plateMat)
@@ -206,6 +231,23 @@ export function FarmCanvas3D() {
       interface Top{tx:number,ty:number,tz:number}
       interface MastInfo{ri:number,ci:number,rx:number,cz_:number,top:Top}
       const masts:MastInfo[]=[]
+      const mastGeometry = poleTemplate
+        ? poleTemplate.geometry
+        : new THREE.CylinderGeometry(0.042,0.058,1,8).translate(0,0.5,0)
+      const templateHeight = poleTemplate
+        ? Number(poleTemplate.userData.exposed_height_m ?? Number(poleTemplate.userData.exposed_height_ft ?? 1) * 0.3048)
+        : 1
+      const poleTransforms:{position:THREETypes.Vector3;quaternion:THREETypes.Quaternion;scale:THREETypes.Vector3}[]=[]
+      const recordPole=(x:number,z:number,top:Top)=>{
+        const direction=new THREE.Vector3(top.tx-x,top.ty,top.tz-z)
+        const length=direction.length()
+        const quaternion=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize())
+        poleTransforms.push({
+          position:new THREE.Vector3(x,0,z),
+          quaternion,
+          scale:new THREE.Vector3(1,length/templateHeight,1),
+        })
+      }
 
       // 경사 마스트
       const addTiltedMast=(x:number,z:number,dX:number,dZ:number):Top=>{
@@ -213,11 +255,7 @@ export function FarmCanvas3D() {
         const topX=x+Math.sin(TILT)*pH*dX
         const topZ=z+Math.sin(TILT)*pH*dZ
         const topY=Math.cos(TILT)*pH
-        const len=Math.sqrt((topX-x)**2+topY**2+(topZ-z)**2)
-        const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.042,0.058,len,8),mastMat)
-        pole.position.set((x+topX)/2,topY/2,(z+topZ)/2)
-        pole.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(topX-x,topY,topZ-z).normalize())
-        pole.castShadow=true;scene.add(pole)
+        recordPole(x,z,{tx:topX,ty:topY,tz:topZ})
         const cap=new THREE.Mesh(new THREE.SphereGeometry(0.055,8,4,0,Math.PI*2,0,Math.PI/2),capMat)
         cap.position.set(topX,topY,topZ);scene.add(cap)
         return {tx:topX,ty:topY,tz:topZ}
@@ -225,8 +263,7 @@ export function FarmCanvas3D() {
       // 수직 마스트
       const addVertMast=(x:number,z:number):Top=>{
         addBase(x,z)
-        const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.042,0.058,pH,8),mastMat)
-        pole.position.set(x,pH/2,z);pole.castShadow=true;scene.add(pole)
+        recordPole(x,z,{tx:x,ty:pH,tz:z})
         const cap=new THREE.Mesh(new THREE.SphereGeometry(0.055,8,4,0,Math.PI*2,0,Math.PI/2),capMat)
         cap.position.set(x,pH,z);scene.add(cap)
         return {tx:x,ty:pH,tz:z}
@@ -251,6 +288,17 @@ export function FarmCanvas3D() {
           masts.push({ri,ci,rx:mx,cz_:mz,top})
         }
       }
+      const poleInstances=new THREE.InstancedMesh(mastGeometry,mastMat,poleTransforms.length)
+      const poleMatrix=new THREE.Matrix4()
+      poleTransforms.forEach((transform,index)=>{
+        poleMatrix.compose(transform.position,transform.quaternion,transform.scale)
+        poleInstances.setMatrixAt(index,poleMatrix)
+      })
+      poleInstances.instanceMatrix.needsUpdate=true
+      poleInstances.castShadow=true
+      poleInstances.receiveShadow=true
+      poleInstances.name=`${poleAssetName}_Instances`
+      scene.add(poleInstances)
 
       // ── 바깥 앵커 + 앵커 와이어 ──────────────────
       const anchorDist=MAST_SPAN*0.4
@@ -408,12 +456,14 @@ export function FarmCanvas3D() {
       gm.opacity=0.2;gm.transparent=true;scene.add(grid)
     }
     build()
-  },[inputs,quantities])
+  },[inputs,quantities,profileId])
 
   return (
     <CanvasWrapper ref={containerRef}>
       <BottomHint>🖱️ 드래그 — 회전 &nbsp;|&nbsp; 방향키 — 이동 &nbsp;|&nbsp; 휠 — 줌</BottomHint>
-      <TopLabel>🌿 3D 투시도 — 홉 성숙기 기준</TopLabel>
+      <TopLabel>
+        🌿 {profileId === 'US_HIGH_TRELLIS' ? 'North America 18 ft reference' : 'Korea steel trellis'}
+      </TopLabel>
     </CanvasWrapper>
   )
 }

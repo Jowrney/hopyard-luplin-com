@@ -75,7 +75,7 @@ function evaluateSafety(
   let recommendedWireDiameterMM = 5.0
   for (const d of diameters) {
     const a = WIRE_TENSILE_MAP[d]
-    if (designTensionKN < a * 0.70 || designTensionKN < a * 0.90) {
+    if (designTensionKN < a * 0.70) {
       recommendedWireDiameterMM = d
       break
     }

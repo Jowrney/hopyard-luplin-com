@@ -6,14 +6,9 @@
     "dev": "next dev -p 3434",
     "build": "next build",
     "start": "next start",
+    "test": "tsx --test \"tests/*.test.ts\"",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset --force && npm run db:seed"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",
@@ -35,7 +30,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.2",
+    "jspdf": "^4.2.1",
     "konva": "^9.3.16",
     "lucide-react": "^0.462.0",
     "next": "^14.2.29",
