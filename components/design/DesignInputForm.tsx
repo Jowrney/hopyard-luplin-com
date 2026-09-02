@@ -6,7 +6,7 @@ import { usePriceStore } from '@/stores/priceStore'
 import { useQuery } from '@tanstack/react-query'
 import type { WindRegion, TrainingType } from '@/types'
 import type { LaborCosts } from '@/stores/designStore'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { getRegionalProfile } from '@/lib/design/regional-profiles'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import {
@@ -61,7 +61,7 @@ const FormTitle = styled.h2`
 
 const FormDesc = styled.p`
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #64748b;
     margin: 0.25rem 0 0;
 `
 
@@ -131,7 +131,7 @@ const MaterialName = styled.p`
 
 const MaterialMeta = styled.p`
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #64748b;
     margin: 0.125rem 0 0;
 `
 
@@ -147,7 +147,7 @@ const MaterialPriceMain = styled.p`
 
 const MaterialPriceUnit = styled.p`
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #64748b;
     margin: 0;
 `
 
@@ -200,7 +200,7 @@ const OwnBrandBadge = styled.span`
 
 const VarietyDesc = styled.p`
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #64748b;
     margin: 0.125rem 0 0;
     overflow: hidden;
     white-space: nowrap;
@@ -247,7 +247,7 @@ const DropdownBtn = styled.button`
     &:hover,&:focus{border-color:#2D5A27;outline:none;}
 `
 const DropdownArrow = styled.span<{$open:boolean}>`
-    font-size:0.75rem;color:#9ca3af;transition:transform 0.15s;
+    font-size:0.75rem;color:#64748b;transition:transform 0.15s;
     transform:${({$open})=>$open?'rotate(180deg)':'none'};
 `
 const DropdownMenu = styled.div`
@@ -377,7 +377,7 @@ const LaborInputWrap = styled.div`
     &:focus-within { border-color: #2D5A27; }
 `
 const LaborInputPrefix = styled.span`
-    padding: 0 0.4rem; font-size: 0.75rem; color: #9ca3af; background: #f9fafb;
+    padding: 0 0.4rem; font-size: 0.75rem; color: #64748b; background: #f9fafb;
     border-right: 1px solid #e5e7eb; line-height: 2rem;
 `
 const LaborInputField = styled.input`
@@ -409,7 +409,7 @@ const RegionBtn = styled.button<{ $selected: boolean }>`
     transition: all 0.15s;
 `
 
-const RegionWind = styled.span`font-size: 0.75rem; color: #9ca3af;`
+const RegionWind = styled.span`font-size: 0.75rem; color: #64748b;`
 
 const ToggleBtn = styled.button<{ $checked: boolean }>`
     width: 100%;
@@ -426,7 +426,7 @@ const ToggleBtn = styled.button<{ $checked: boolean }>`
 
 const ToggleLeft = styled.div`text-align: left;`
 const ToggleLabel = styled.p`font-size: 0.875rem; font-weight: 500; color: #1f2937; margin: 0;`
-const ToggleDesc = styled.p`font-size: 0.75rem; color: #9ca3af; margin: 0.125rem 0 0;`
+const ToggleDesc = styled.p`font-size: 0.75rem; color: #64748b; margin: 0.125rem 0 0;`
 
 const ToggleTrack = styled.div<{ $checked: boolean }>`
     width: 2.5rem;
@@ -535,12 +535,14 @@ function NumberInput({ label, value, min, max, step, onChange, mt }: {
   label: string; value: number; min: number; max: number; step: number
   onChange: (v: number) => void; mt?: string
 }) {
+  const inputId = useId()
   return (
     <div style={{ marginTop: mt }}>
-      <NumLabel>{label}</NumLabel>
+      <NumLabel htmlFor={inputId}>{label}</NumLabel>
       <NumRow>
         <NumBtn onClick={() => onChange(Math.max(min, Math.round((value - step) * 10) / 10))}>−</NumBtn>
         <NumInput
+          id={inputId}
           type="number" value={value} min={min} max={max} step={step}
           onChange={(e) => {
             const v = parseFloat(e.target.value)

@@ -42,8 +42,8 @@ test('estimate display labels are derived from stable codes instead of Korean ca
 })
 
 test('catalog varieties have bilingual names and descriptions by stable code', () => {
-  assert.equal(getVarietyName('HOP_EDEN_01', '홉이든 1호', 'en'), 'HopEden No. 1')
-  assert.equal(getVarietyName('HOP_EDEN_01', 'HopEden No. 1', 'ko'), '홉이든 1호')
+  assert.equal(getVarietyName('HOP_EDEN_01', '홉이든 1호', 'en'), 'HOPEDEN No. 1')
+  assert.equal(getVarietyName('HOP_EDEN_01', 'HOPEDEN No. 1', 'ko'), '홉이든 1호')
   assert.equal(getVarietyDescription('HOP_CASCADE', 'en'), 'Citrus and floral; versatile')
   assert.equal(getVarietyDescription('HOP_CASCADE', 'ko'), '감귤·꽃향, 범용성')
 })

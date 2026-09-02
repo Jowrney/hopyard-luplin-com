@@ -47,7 +47,7 @@ const PROFILES: readonly RegionalDesignProfile[] = [
     unitSystem: 'metric',
     currency: 'KRW',
     loadModel: 'kr-preliminary',
-    description: 'Current HopEden steel-pole system for preliminary Korean hopyard planning.',
+    description: 'Current HOPEDEN steel-pole system for preliminary Korean hopyard planning.',
     defaults: {
       rowSpacingM: 3.5,
       plantSpacingM: 1,
@@ -57,7 +57,7 @@ const PROFILES: readonly RegionalDesignProfile[] = [
     },
     pricing: {
       status: 'live-catalog',
-      note: 'Prices are supplied by the active HopEden material catalog.',
+      note: 'Prices are supplied by the active HOPEDEN material catalog.',
     },
     materials: [
       {
@@ -66,7 +66,7 @@ const PROFILES: readonly RegionalDesignProfile[] = [
         name: 'Galvanized steel pole 60 mm × 2T × 6 m',
         specification: '6 m galvanized steel tube; 5.1 m catalog effective height',
         unit: 'each',
-        sourceLabel: 'HopEden material catalog',
+        sourceLabel: 'HOPEDEN material catalog',
         sourceUrl: HOPYARD_URL,
         visualMaterial: 'galvanized-steel',
       },
@@ -76,7 +76,7 @@ const PROFILES: readonly RegionalDesignProfile[] = [
         name: 'Screw anchor L600 mm',
         specification: '600 mm screw-in ground anchor',
         unit: 'each',
-        sourceLabel: 'HopEden material catalog',
+        sourceLabel: 'HOPEDEN material catalog',
         sourceUrl: HOPYARD_URL,
         visualMaterial: 'galvanized-steel',
       },
@@ -86,12 +86,12 @@ const PROFILES: readonly RegionalDesignProfile[] = [
         name: 'High-tensile steel wire 3.2 mm',
         specification: '3.2 mm catalog wire; 24.8 kN listed tensile strength',
         unit: 'm',
-        sourceLabel: 'HopEden material catalog',
+        sourceLabel: 'HOPEDEN material catalog',
         sourceUrl: HOPYARD_URL,
         visualMaterial: 'galvanized-steel',
       },
     ],
-    sources: [{ label: 'HopEden material catalog', url: HOPYARD_URL }],
+    sources: [{ label: 'HOPEDEN material catalog', url: HOPYARD_URL }],
     engineeringDisclaimer: 'Preliminary planning estimate; requires review by a qualified local engineer.',
   },
   {

@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import { BrandLogo } from '@/components/brand/BrandLogo'
+import { Blueprint, Cube, CurrencyCircleDollar, Plant, SignIn, Sparkle, UserPlus } from '@phosphor-icons/react'
 
 const Page = styled.main`
     min-height: 100vh;
@@ -18,12 +19,30 @@ const Header = styled.header`
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
 `
 
 const Logo = styled(Link)`
     display: flex;
     align-items: center;
     text-decoration: none;
+`
+
+const HeaderActions = styled.div`
+    display:flex;align-items:center;justify-content:flex-end;gap:0.55rem;
+    @media(max-width:640px){gap:0.35rem;}
+`
+
+const AuthLink = styled(Link)`
+    color:#2D5A27;text-decoration:none;font-size:0.82rem;font-weight:700;
+    display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.65rem;border-radius:0.55rem;
+    &:hover{background:#F0F7EF;}
+    @media(max-width:480px){span{display:none;}}
+`
+
+const RegisterLink = styled(AuthLink)`
+    background:#2D5A27;color:white;
+    &:hover{background:#234820;}
 `
 
 const Hero = styled.section`
@@ -68,6 +87,20 @@ const CTAButton = styled(Link)`
     &:hover { background: #15803d; }
 `
 
+const CTAGroup = styled.div`
+    display:flex;align-items:center;justify-content:center;gap:0.75rem;flex-wrap:wrap;
+`
+
+const DemoButton = styled(CTAButton)`
+    background:white;color:#166534;border:2px solid #86a882;
+    display:inline-flex;align-items:center;gap:0.5rem;
+    &:hover{background:#F0F7EF;}
+`
+
+const DemoNote = styled.p`
+    margin:0.85rem auto 0;color:#64748b;font-size:0.76rem;
+`
+
 const Features = styled.section`
     max-width: 1200px;
     margin: 0 auto;
@@ -89,7 +122,7 @@ const FeatureCard = styled.div`
 `
 
 const FeatureIcon = styled.div`
-    font-size: 2rem;
+    color:#2D5A27;
     margin-bottom: 1rem;
 `
 
@@ -117,10 +150,10 @@ const Footer = styled.footer`
 export default function LandingPage() {
   const { text } = useLocale()
   const features = [
-    { icon: '🌱', title: text('Seed cost estimate', '종자 비용 산출'), desc: text('Automatically calculate rootstock quantities and costs by variety', '품종별 종근 수량·비용 자동 계산') },
-    { icon: '🏗️', title: text('Infrastructure design', '시설 설계'), desc: text('Validate pole and wire loads against KBC standards', '폴·와이어 하중 KBC 기준 검증') },
-    { icon: '🗺️', title: text('2D/3D visualization', '2D/3D 시각화'), desc: text('Preview plans and perspective views in real time', '실시간 평면도·투시도 확인') },
-    { icon: '💰', title: text('Real-time estimates', '실시간 견적'), desc: text('See cost updates as soon as materials change', '자재 변경 즉시 비용 반영') },
+    { icon: <Plant size={32} weight="fill" />, title: text('Seed cost estimate', '종자 비용 산출'), desc: text('Automatically calculate rootstock quantities and costs by variety', '품종별 종근 수량·비용 자동 계산') },
+    { icon: <Blueprint size={32} weight="duotone" />, title: text('Infrastructure design', '시설 설계'), desc: text('Validate pole and wire loads against KBC standards', '폴·와이어 하중 KBC 기준 검증') },
+    { icon: <Cube size={32} weight="duotone" />, title: text('2D/3D visualization', '2D/3D 시각화'), desc: text('Preview plans and perspective views in real time', '실시간 평면도·투시도 확인') },
+    { icon: <CurrencyCircleDollar size={32} weight="duotone" />, title: text('Real-time estimates', '실시간 견적'), desc: text('See cost updates as soon as materials change', '자재 변경 즉시 비용 반영') },
   ]
 
   return (
@@ -129,7 +162,11 @@ export default function LandingPage() {
         <Logo href="/" aria-label="Hopyard Designer home">
           <BrandLogo width={190} />
         </Logo>
-        <LanguageSwitcher />
+        <HeaderActions>
+          <LanguageSwitcher />
+          <AuthLink href="/login"><SignIn size={18} weight="bold"/><span>{text('Sign in', '로그인')}</span></AuthLink>
+          <RegisterLink href="/register"><UserPlus size={18} weight="bold"/><span>{text('Create account', '회원가입')}</span></RegisterLink>
+        </HeaderActions>
       </Header>
 
       <Hero>
@@ -143,7 +180,11 @@ export default function LandingPage() {
             '종자 비용부터 지주 시설 설계·자재비까지 한 번에 산출하고, 실시간 견적을 받을 수 있는 스마트 농업 설계 플랫폼'
           )}
         </HeroDesc>
-        <CTAButton href="/design">{text('Start designing for free →', '무료로 설계 시작하기 →')}</CTAButton>
+        <CTAGroup>
+          <CTAButton href="/design">{text('Start designing for free →', '무료로 설계 시작하기 →')}</CTAButton>
+          <DemoButton href="/design/demo"><Sparkle size={20} weight="fill"/>{text('Try WebMCP Demo', 'WebMCP 데모 체험')}</DemoButton>
+        </CTAGroup>
+        <DemoNote>{text('The challenge demo works without signing in.', '챌린지 데모는 로그인 없이 사용할 수 있습니다.')}</DemoNote>
       </Hero>
 
       <Features>
@@ -158,7 +199,7 @@ export default function LandingPage() {
         </FeatureGrid>
       </Features>
 
-      <Footer>{text('HopEden Agricultural Corporation', '농업회사법인 홉이든')} | hopeden.kr</Footer>
+      <Footer>{text('HOPEDEN Agricultural Corporation', '농업회사법인 홉이든')} | hopeden.com</Footer>
     </Page>
   )
 }

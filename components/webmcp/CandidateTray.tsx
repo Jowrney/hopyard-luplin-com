@@ -27,7 +27,7 @@ const Market = styled.span`font-size:0.58rem;font-weight:700;background:#eef2ff;
 const Rationale = styled.p`font-size:0.65rem;line-height:1.35;color:#6b7280;margin:0.3rem 0 0.55rem;min-height:1.8em;`
 const Metrics = styled.div`display:grid;grid-template-columns:repeat(3,1fr);gap:0.3rem;margin-bottom:0.55rem;`
 const Metric = styled.div`background:#f9fafb;border-radius:0.45rem;padding:0.3rem;text-align:center;`
-const MetricLabel = styled.div`font-size:0.55rem;color:#9ca3af;`
+const MetricLabel = styled.div`font-size:0.55rem;color:#64748b;`
 const MetricValue = styled.div`font-size:0.66rem;font-weight:700;color:#374151;margin-top:0.12rem;`
 const PreviewButton = styled.button<{ $active: boolean }>`
   width:100%;border:0;border-radius:0.5rem;padding:0.42rem;cursor:pointer;font-size:0.68rem;font-weight:700;

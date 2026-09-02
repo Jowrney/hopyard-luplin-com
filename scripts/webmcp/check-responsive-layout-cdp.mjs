@@ -51,6 +51,8 @@ const baseState = () => evaluate(`(() => {
   const logo = document.querySelector('header img[alt="Hopyard Designer"]');
   const headerText = document.querySelector('header')?.innerText || '';
   const tabs = [...document.querySelectorAll('main button')].map((node) => node.textContent?.trim()).filter(Boolean);
+  const actionRow = document.querySelector('[data-testid="view-action-row"]')?.getBoundingClientRect();
+  const metricsRow = document.querySelector('[data-testid="view-metrics-row"]')?.getBoundingClientRect();
   return {
     innerWidth,
     scrollWidth: document.documentElement.scrollWidth,
@@ -62,6 +64,7 @@ const baseState = () => evaluate(`(() => {
     logoCenter: logo ? logo.getBoundingClientRect().left + logo.getBoundingClientRect().width / 2 : -1,
     topActions: headerText.includes('EN') && (headerText.includes('Structurally safe') || headerText.includes('Caution') || headerText.includes('Danger')) && headerText.includes('Estimate'),
     viewTabs: tabs.filter((label) => label === '2D' || label === '3D'),
+    metricsBelowActions: Boolean(actionRow && metricsRow && metricsRow.top >= actionRow.bottom),
     canvasWidth: canvas?.getBoundingClientRect().width ?? 0,
   };
 })()`)
@@ -114,7 +117,7 @@ const report = { desktop, desktopScrollOwners, tabletClosed, tabletLeft, tabletR
 console.log(JSON.stringify(report, null, 2))
 ws.close()
 const valid =
-  desktop.scrollWidth === 1440 && desktop.headerRight <= 1440 && desktop.inputExpanded === 'true' && desktop.reviewExpanded === 'true' && desktop.canvasWidth >= 500 && Math.abs(desktop.logoCenter - 720) <= 1 && desktop.inputButtonLeft <= 25 && desktop.reviewButtonRight >= 1415 && desktop.topActions && desktop.viewTabs.length === 2 && desktopScrollOwners.left === 1 && desktopScrollOwners.right === 1 &&
+  desktop.scrollWidth === 1440 && desktop.headerRight <= 1440 && desktop.inputExpanded === 'true' && desktop.reviewExpanded === 'true' && desktop.canvasWidth >= 500 && Math.abs(desktop.logoCenter - 720) <= 1 && desktop.inputButtonLeft <= 25 && desktop.reviewButtonRight >= 1415 && desktop.topActions && desktop.viewTabs.length === 2 && desktop.metricsBelowActions && desktopScrollOwners.left === 1 && desktopScrollOwners.right === 1 &&
   tabletClosed.scrollWidth === 1024 && tabletClosed.inputExpanded === 'false' && tabletClosed.reviewExpanded === 'false' && tabletClosed.headerRight <= 1024 && Math.abs(tabletClosed.logoCenter - 512) <= 1 && !tabletClosed.topActions && tabletClosed.viewTabs.length === 2 &&
   tabletLeft.expanded === 'true' && tabletLeft.left >= 0 && tabletLeft.right <= 1024 &&
   tabletRight.expanded === 'true' && tabletRight.left >= 0 && tabletRight.right <= 1024 && tabletRight.utilities && tabletScrollOwners.right === 1 &&

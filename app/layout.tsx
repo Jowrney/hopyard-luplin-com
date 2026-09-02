@@ -5,7 +5,7 @@ import StyledComponentsRegistry from './registry'
 import { WEBMCP_ORIGIN_TRIAL_TOKEN } from '@/lib/webmcp/origin-trial'
 
 export const metadata: Metadata = {
-  title: 'HopEden Designer — Hopyard planning and cost estimation',
+  title: 'HOPEDEN Designer — Hopyard planning and cost estimation',
   description: 'Plan hop trellis systems, compare materials and estimates, and review the farm in 2D and 3D.',
 }
 

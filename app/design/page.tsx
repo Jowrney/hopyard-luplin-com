@@ -52,6 +52,11 @@ const PageWrapper = styled.div`
     overflow: hidden;
 `
 
+const ScreenReaderTitle = styled.h1`
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0;
+`
+
 const PageHeader = styled.header`
     flex-shrink: 0;
     background: white;
@@ -141,9 +146,7 @@ const RightUtilities = styled.div`
 
 const PriceLoadingText = styled.span`
     font-size: 0.75rem;
-    color: #9ca3af;
-    animation: pulse 1s infinite;
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    color: #64748b;
 `
 
 const OutlineButton = styled.button`
@@ -225,13 +228,16 @@ const ViewToolbar = styled.div`
     border-bottom: 1px solid #E8E4DC;
     padding: 0.5rem 1rem;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
     gap: 0.5rem;
     @media (max-width: 900px) {
-        flex-wrap: wrap;
         padding: 0.5rem 0.65rem;
     }
+`
+
+const ViewActionRow = styled.div`
+    display:flex;align-items:center;justify-content:space-between;gap:0.75rem;
 `
 
 const ViewTabs = styled.div`
@@ -252,7 +258,7 @@ const ViewTab = styled.button<{ $active: boolean }>`
     cursor: pointer;
     transition: all 0.15s;
     background: ${({ $active }) => ($active ? 'white' : 'transparent')};
-    color: ${({ $active }) => ($active ? '#2D5A27' : '#6b7280')};
+    color: ${({ $active }) => ($active ? '#2D5A27' : '#5f6f86')};
     box-shadow: ${({ $active }) => ($active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none')};
 
     &:hover { color: ${({ $active }) => ($active ? '#2D5A27' : '#374151')}; }
@@ -261,6 +267,8 @@ const ViewTab = styled.button<{ $active: boolean }>`
 const ChipsRow = styled.div`
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 100%;
     gap: 0.5rem;
     @media (max-width: 900px) {
         width: 100%;
@@ -268,6 +276,7 @@ const ChipsRow = styled.div`
         flex-wrap: wrap;
         overflow: visible;
         gap: 0.35rem;
+        justify-content: flex-start;
     }
 `
 
@@ -344,7 +353,7 @@ const PlaceholderWrapper = styled.div`
 
 const PlaceholderInner = styled.div`
     text-align: center;
-    color: #9ca3af;
+    color: #64748b;
 `
 
 const PlaceholderIcon = styled.div`
@@ -515,6 +524,7 @@ export default function DesignPage() {
         </HeaderLeft>
 
         <HeaderCenter>
+          <ScreenReaderTitle>{text('Hopyard design workspace', '홉 농장 설계 작업공간')}</ScreenReaderTitle>
           <HeaderLogo href="/" aria-label={text('Hopyard Designer home', 'Hopyard Designer 홈')}>
             <BrandLogo width={178} />
           </HeaderLogo>
@@ -547,7 +557,7 @@ export default function DesignPage() {
           aria-label={text('Close open panel', '열린 패널 닫기')}
           onClick={() => { setLeftPanelOpen(false); setRightPanelOpen(false) }}
         />
-        <LeftPanel id="design-input-panel" $open={leftPanelOpen} aria-hidden={!leftPanelOpen}>
+        <LeftPanel id="design-input-panel" $open={leftPanelOpen} aria-hidden={!leftPanelOpen} aria-label={text('Design inputs', '설계 입력')}>
           <PanelHeader>
             <PanelTitle><SlidersHorizontal size={18} weight="bold" />{text('Design inputs', '설계 입력')}</PanelTitle>
             <PanelClose type="button" onClick={() => setLeftPanelOpen(false)} aria-label={text('Close design inputs', '설계 입력 닫기')}><X size={17} weight="bold" /></PanelClose>
@@ -557,16 +567,19 @@ export default function DesignPage() {
 
         <CenterPanel>
           <ViewToolbar>
-            <ViewTabs>
-              {(['2d', '3d'] as ViewMode[]).map((mode) => (
-                <ViewTab key={mode} $active={viewMode === mode} onClick={() => setViewMode(mode)}>
-                  {mode === '2d' ? text('2D', '2D') : text('3D', '3D')}
-                </ViewTab>
-              ))}
-            </ViewTabs>
+            <ViewActionRow data-testid="view-action-row">
+              <ViewTabs role="group" aria-label={text('Canvas view', '캔버스 보기')}>
+                {(['2d', '3d'] as ViewMode[]).map((mode) => (
+                  <ViewTab key={mode} $active={viewMode === mode} aria-pressed={viewMode === mode} onClick={() => setViewMode(mode)}>
+                    {mode === '2d' ? text('2D', '2D') : text('3D', '3D')}
+                  </ViewTab>
+                ))}
+              </ViewTabs>
+              <PngButton onClick={handlePngSave}><DownloadSimple size={16} weight="bold" />{text('Save PNG', 'PNG 저장')}</PngButton>
+            </ViewActionRow>
 
             {quantities && (
-              <ChipsRow>
+              <ChipsRow data-testid="view-metrics-row">
                 <Chip><Columns size={15} weight="bold"/><span>{text(`${number(quantities.totalPoleCount)} poles`, `폴 ${number(quantities.totalPoleCount)}개`)}</span></Chip>
                 <Chip><LinkSimple size={15} weight="bold"/><span>{text(`${number(quantities.totalWireM)} m wire`, `와이어 ${number(quantities.totalWireM)}m`)}</span></Chip>
                 <Chip><Plant size={15} weight="fill"/><span>{text(`${number(quantities.plantCount)} plants`, `${number(quantities.plantCount)}주`)}</span></Chip>
@@ -574,7 +587,6 @@ export default function DesignPage() {
               </ChipsRow>
             )}
 
-            <PngButton onClick={handlePngSave}><DownloadSimple size={16} weight="bold" />{text('Save PNG', 'PNG 저장')}</PngButton>
           </ViewToolbar>
 
           <CanvasArea ref={canvasAreaRef}>
@@ -584,7 +596,7 @@ export default function DesignPage() {
           </CanvasArea>
         </CenterPanel>
 
-        <RightPanel id="design-review-panel" $open={rightPanelOpen} aria-hidden={!rightPanelOpen}>
+        <RightPanel id="design-review-panel" $open={rightPanelOpen} aria-hidden={!rightPanelOpen} aria-label={text('Review & estimate', '검토 및 견적')}>
           <PanelHeader>
             <PanelTitle><Receipt size={18} weight="bold" />{text('Review & estimate', '검토 및 견적')}</PanelTitle>
             <PanelClose type="button" onClick={() => setRightPanelOpen(false)} aria-label={text('Close review panel', '검토 패널 닫기')}><X size={17} weight="bold" /></PanelClose>

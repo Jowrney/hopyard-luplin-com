@@ -32,7 +32,7 @@ const PanelTitle = styled.h2`
 
 const CalcText = styled.span`
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #64748b;
     animation: pulse 1s infinite;
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 `
@@ -55,7 +55,7 @@ const SummaryBox = styled.div`
 const SummaryLabel = styled.p`
     font-size: 0.625rem;
     font-weight: 600;
-    color: #6b7280;
+    color: #5f6f86;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0 0 0.75rem;
@@ -68,7 +68,7 @@ const SummaryRow = styled.div`
     & + & { margin-top: 0.5rem; }
 `
 
-const SummaryKey = styled.span`font-size: 0.75rem; color: #6b7280;`
+const SummaryKey = styled.span`font-size: 0.75rem; color: #5f6f86;`
 const SummaryVal = styled.span`font-size: 0.875rem; font-weight: 600; color: #1f2937;`
 
 // 하중 분석
@@ -87,7 +87,7 @@ const LoadCardHeader = styled.div`
 const LoadCardTitle = styled.p`
     font-size: 0.625rem;
     font-weight: 600;
-    color: #6b7280;
+    color: #5f6f86;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0;
@@ -103,7 +103,7 @@ const LoadLabel = styled.span<{ $bold?: boolean }>`
     font-weight: ${({ $bold }) => ($bold ? '600' : '400')};
 `
 
-const LoadSub = styled.p`font-size: 0.625rem; color: #9ca3af; margin: 0.125rem 0 0;`
+const LoadSub = styled.p`font-size: 0.625rem; color: #64748b; margin: 0.125rem 0 0;`
 
 const LoadValue = styled.span<{ $bold?: boolean }>`
     font-size: 0.875rem;
@@ -175,7 +175,7 @@ const CatDot = styled.div<{ $color: string }>`width: 0.5rem; height: 0.5rem; bor
 const CatName = styled.span`font-size: 0.875rem; font-weight: 600; color: #374151;`
 const CatRight = styled.div`display: flex; align-items: center; gap: 0.5rem;`
 const CatTotal = styled.span`font-size: 0.875rem; font-weight: 700; color: #1A2E18;`
-const CatArrow = styled.span`font-size: 0.75rem; color: #9ca3af;`
+const CatArrow = styled.span`font-size: 0.75rem; color: #64748b;`
 
 const CatBody = styled.div`
     padding: 0.75rem 1rem;
@@ -189,7 +189,7 @@ const CatBody = styled.div`
 const LineItem = styled.div`display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem;`
 const LineLeft = styled.div`flex: 1; min-width: 0;`
 const LineName = styled.p`font-size: 0.75rem; color: #374151; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;`
-const LineMeta = styled.p`font-size: 0.625rem; color: #9ca3af; margin: 0.125rem 0 0;`
+const LineMeta = styled.p`font-size: 0.625rem; color: #64748b; margin: 0.125rem 0 0;`
 const LineTotal = styled.span`font-size: 0.75rem; font-weight: 600; color: #1f2937; white-space: nowrap;`
 
 // 합계 박스
@@ -216,7 +216,7 @@ const PerSqm = styled.p`font-size: 0.75rem; color: rgba(255,255,255,0.4); text-a
 const EmptyState = styled.div`
     text-align: center;
     padding: 3rem 1rem;
-    color: #9ca3af;
+    color: #64748b;
 `
 
 const EmptyIcon = styled.p`font-size: 2.5rem; margin-bottom: 0.75rem;`
@@ -294,7 +294,7 @@ export function EstimatePanel() {
     : text('Korea galvanized steel V-trellis', '한국형 아연도금 강관 V자 트렐리스')
   const profileDescription = activeProfile.id === 'US_HIGH_TRELLIS'
     ? text('Quarter-acre high-trellis reference configuration based on Nebraska Extension EC3026.', 'Nebraska Extension EC3026에 기반한 1/4 acre 고식 트렐리스 참고 구성입니다.')
-    : text('Current HopEden steel-pole system for preliminary Korean hopyard planning.', '한국 홉 농장 예비 설계를 위한 현재 HopEden 강관 지주 시스템입니다.')
+    : text('Current HOPEDEN steel-pole system for preliminary Korean hopyard planning.', '한국 홉 농장 예비 설계를 위한 현재 HOPEDEN 강관 지주 시스템입니다.')
 
   return (
     <PanelWrapper>
@@ -431,7 +431,7 @@ export function EstimatePanel() {
                 <TotalRow>
                   <TotalLabel style={{color:'#dc2626'}}>
                     🏷️ {text('Discount', '할인')}
-                    {discountMemo && <span style={{fontSize:'0.65rem',color:'#9ca3af',marginLeft:'0.3rem'}}>({discountMemo})</span>}
+                    {discountMemo && <span style={{fontSize:'0.65rem',color:'#94a3b8',marginLeft:'0.3rem'}}>({discountMemo})</span>}
                   </TotalLabel>
                   <TotalValue style={{color:'#dc2626'}}>−{money(estimate.discount)}</TotalValue>
                 </TotalRow>
@@ -440,7 +440,7 @@ export function EstimatePanel() {
                 <TotalRow><TotalLabel>{text('Subtotal', '소계')}</TotalLabel><TotalValue>{money(estimate.subtotal)}</TotalValue></TotalRow>
                 {estimate.vat > 0 && (
                   <TotalRow>
-                    <TotalLabel>{text('VAT (10%)', '부가세 (10%)')} <span style={{fontSize:'0.65rem',color:'#9ca3af'}}>{text('rhizomes exempt', '종근 면세')}</span></TotalLabel>
+                    <TotalLabel>{text('VAT (10%)', '부가세 (10%)')} <span style={{fontSize:'0.65rem',color:'#94a3b8'}}>{text('rhizomes exempt', '종근 면세')}</span></TotalLabel>
                     <TotalValue>{money(estimate.vat)}</TotalValue>
                   </TotalRow>
                 )}

@@ -52,6 +52,21 @@ test('view mode labels are only 2D and 3D', () => {
   assert.match(source, /text\('2D', '2D'\)/)
   assert.match(source, /text\('3D', '3D'\)/)
   assert.doesNotMatch(source, /2D plan|3D perspective|2D 평면도|3D 투시도/)
+  assert.match(source, /aria-pressed={viewMode === mode}/)
+})
+
+test('canvas toolbar puts actions above a dedicated metrics row', () => {
+  const toolbar = source.slice(source.indexOf('<ViewToolbar>'), source.indexOf('</ViewToolbar>'))
+  assert.match(toolbar, /data-testid="view-action-row"/)
+  assert.match(toolbar, /data-testid="view-metrics-row"/)
+  assert.match(toolbar, /<ViewActionRow[\s>][\s\S]*<ViewTabs[\s>][\s\S]*<PngButton[\s\S]*<\/ViewActionRow>/)
+  assert.ok(toolbar.indexOf('</ViewActionRow>') < toolbar.indexOf('<ChipsRow'))
+})
+
+test('design page exposes a heading and uniquely named panel landmarks', () => {
+  assert.match(source, /<ScreenReaderTitle>/)
+  assert.match(source, /aria-label={text\('Design inputs'/)
+  assert.match(source, /aria-label={text\('Review & estimate'/)
 })
 
 test('workspace controls use Phosphor icons instead of text glyphs', () => {

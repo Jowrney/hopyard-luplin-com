@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useLocale } from '@/components/i18n/LocaleProvider'
 import {
@@ -91,16 +91,42 @@ interface WebMCPHelpDialogProps {
 export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMCPHelpDialogProps) {
   const { locale } = useLocale()
   const [copied, setCopied] = useState(false)
+  const dialogRef = useRef<HTMLElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!open) return
+    previousFocusRef.current = document.activeElement as HTMLElement | null
     setCopied(false)
+    window.requestAnimationFrame(() => closeButtonRef.current?.focus())
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )]
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [locale, onClose, open])
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      previousFocusRef.current?.focus()
+    }
+  }, [onClose, open])
 
   if (!open) return null
   const ko = locale === 'ko'
@@ -115,7 +141,7 @@ export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMC
 
   return (
     <Overlay onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <Dialog role="dialog" aria-modal="true" aria-labelledby="webmcp-help-title">
+      <Dialog ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="webmcp-help-title">
         <Header>
           <div>
             <Eyebrow>WebMCP Challenge</Eyebrow>
@@ -126,7 +152,7 @@ export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMC
                 : (ko ? '현재 브라우저에서 WebMCP API를 사용할 수 없습니다.' : 'The WebMCP API is unavailable in this browser.')}
             </HeaderStatus>
           </div>
-          <CloseButton type="button" onClick={onClose} aria-label={ko?'닫기':'Close'}>×</CloseButton>
+          <CloseButton ref={closeButtonRef} type="button" onClick={onClose} aria-label={ko?'닫기':'Close'}>×</CloseButton>
         </Header>
 
         <Body>

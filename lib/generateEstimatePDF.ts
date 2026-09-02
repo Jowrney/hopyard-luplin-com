@@ -130,7 +130,7 @@ export async function generateEstimatePDF(opts: EstimatePDFOptions): Promise<voi
     const pageNum = doc.getNumberOfPages()
     fillRect(0, PH - 15, PW, 15, BRAND_GREEN)
     setFont(8, 'normal', WHITE)
-    text(t('HopEden Agricultural Corporation | hopeden.kr | HopEden Designer', '농업회사법인 홉이든 | hopeden.kr | HopEden Designer'), ML, PH - 6)
+    text(t('HOPEDEN Agricultural Corporation | hopeden.com | HOPEDEN Designer', '농업회사법인 홉이든 | hopeden.com | HOPEDEN Designer'), ML, PH - 6)
     text(toNum(pageNum), PW - MR, PH - 6, { align: 'right' })
   }
 
@@ -146,9 +146,9 @@ export async function generateEstimatePDF(opts: EstimatePDFOptions): Promise<voi
 
   fillRect(0, 0, PW, 55, BRAND_GREEN)
   setFont(22, 'bold', WHITE)
-  text('HopEden Designer', ML, 22)
+  text('HOPEDEN Designer', ML, 22)
   setFont(10, 'normal', [180, 220, 170])
-  text(t('Hop trellis design & cost estimation | HopEden Agricultural Corporation', '홉 시설설계 & 비용산출 플랫폼 | 농업회사법인 홉이든'), ML, 30)
+  text(t('Hop trellis design & cost estimation | HOPEDEN Agricultural Corporation', '홉 시설설계 & 비용산출 플랫폼 | 농업회사법인 홉이든'), ML, 30)
 
   setFont(15, 'bold', WHITE)
   text(t('FACILITY DESIGN ESTIMATE', '시 설 설 계 견 적 서'), PW - MR, 20, { align: 'right' })
@@ -440,16 +440,16 @@ export async function generateEstimatePDF(opts: EstimatePDFOptions): Promise<voi
   setFont(10, 'bold', DARK)
   text(t('Supply Inquiry', '공급 문의'), ML + 6, y + 9)
   setFont(8, 'normal', DARK)
-  text(t('HopEden Agricultural Corporation', '농업회사법인 홉이든'), ML + 6, y + 17)
-  text('hopeden.kr', ML + 6, y + 24)
+  text(t('HOPEDEN Agricultural Corporation', '농업회사법인 홉이든'), ML + 6, y + 17)
+  text('hopeden.com', ML + 6, y + 24)
   setFont(8, 'bold', BRAND_GREEN)
-  text(t('Order directly from your HopEden Designer plan.', 'HopEden Designer로 설계한 내용을 그대로 발주하실 수 있습니다.'), ML + 50, y + 17)
+  text(t('Order directly from your HOPEDEN Designer plan.', 'HOPEDEN Designer로 설계한 내용을 그대로 발주하실 수 있습니다.'), ML + 50, y + 17)
   setFont(8, 'normal', GRAY)
   text(t('Attach this estimate to your inquiry for a faster response.', '이 견적서를 첨부하여 문의해 주시면 빠르게 안내드립니다.'), ML + 50, y + 24)
   drawPageFooter()
 
   const documentLabel = t('Estimate', '견적서')
   const designName = safeFilePart(opts.designName?.trim() || defaultDesignName)
-  const fileName = `HopEden_${documentLabel}_${designName}_${new Date().toISOString().slice(0, 10)}.pdf`
+  const fileName = `HOPEDEN_${documentLabel}_${designName}_${new Date().toISOString().slice(0, 10)}.pdf`
   doc.save(fileName)
 }

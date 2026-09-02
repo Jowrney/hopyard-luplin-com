@@ -393,7 +393,7 @@ function VarietiesTable({ varieties, onEdit }: {
             <Th>{text('Variety', '품종명')}</Th>
             <Th>{text('Characteristics', '특성')}</Th>
             <Th>{text('Code', '코드')}</Th>
-            <Th $align="center">{text('HopEden original', '홉이든 자체')}</Th>
+            <Th $align="center">{text('HOPEDEN original', '홉이든 자체')}</Th>
             <Th $align="right">{text('Current price', '현재 단가')}</Th>
             <Th $align="center">{text('Edit', '수정')}</Th>
           </tr>
@@ -404,7 +404,7 @@ function VarietiesTable({ varieties, onEdit }: {
               <Td>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <ItemName>{getVarietyName(v.code, locale === 'ko' ? v.nameKo ?? v.name : v.name, locale)}</ItemName>
-                  {v.isOwnBrand && <OwnBrandBadge>HopEden</OwnBrandBadge>}
+                  {v.isOwnBrand && <OwnBrandBadge>HOPEDEN</OwnBrandBadge>}
                 </span>
               </Td>
               <Td><ItemSpec style={{ maxWidth: '200px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getVarietyDescription(v.code, locale) || (locale === 'en' && /[가-힣]/.test(v.characteristics ?? '') ? '—' : v.characteristics ?? '—')}</ItemSpec></Td>
@@ -573,7 +573,7 @@ function EditVarietyModal({ data, onSave, onClose }: {
           )}
           <div style={{ margin: '0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" id="isOwnBrand" checked={form.isOwnBrand} onChange={upd('isOwnBrand')} />
-            <label htmlFor="isOwnBrand" style={{ fontSize: '0.875rem', color: '#374151' }}>{text('HopEden original variety', '홉이든 자체 육종')}</label>
+            <label htmlFor="isOwnBrand" style={{ fontSize: '0.875rem', color: '#374151' }}>{text('HOPEDEN original variety', '홉이든 자체 육종')}</label>
           </div>
           <div>
             <FieldLabel>{text('Reason for change', '변경 사유')} <span style={{ color: '#ef4444' }}>*</span></FieldLabel>
@@ -685,7 +685,7 @@ function AddVarietyModal({ onSave, onClose }: {
           ))}
           <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" id="isOwnBrand2" checked={form.isOwnBrand} onChange={upd('isOwnBrand')} />
-            <label htmlFor="isOwnBrand2" style={{ fontSize: '0.875rem', color: '#374151' }}>{text('HopEden original variety', '홉이든 자체 육종')}</label>
+            <label htmlFor="isOwnBrand2" style={{ fontSize: '0.875rem', color: '#374151' }}>{text('HOPEDEN original variety', '홉이든 자체 육종')}</label>
           </div>
           <ModalFooter>
             <CancelBtn onClick={onClose}>{text('Cancel', '취소')}</CancelBtn>

@@ -26,7 +26,7 @@ import { PlugsConnected } from '@phosphor-icons/react'
 const StatusBadge = styled.button<{ $active: boolean }>`
   display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.55rem;
   border-radius:999px;font-size:0.68rem;font-weight:700;white-space:nowrap;
-  color:${({ $active }) => $active ? '#166534' : '#6b7280'};
+  color:${({ $active }) => $active ? '#166534' : '#5f6f86'};
   background:${({ $active }) => $active ? '#dcfce7' : '#f3f4f6'};
   border:1px solid ${({ $active }) => $active ? '#86efac' : '#e5e7eb'};
   cursor:pointer;font-family:inherit;

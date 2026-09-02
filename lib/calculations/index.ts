@@ -1,5 +1,5 @@
 // types/index.ts
-// HopEden Designer — 공통 타입 정의
+// HOPEDEN Designer — 공통 타입 정의
 
 // ─────────────────────────────────────────
 // Enums (Prisma enum 동기화)

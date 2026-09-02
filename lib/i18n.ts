@@ -132,8 +132,8 @@ const VARIETIES: Record<string, { name: Record<Locale, string>; description: Rec
     description: { en: 'Noble hop for lagers', ko: '라거용 노블 홉' },
   },
   HOP_EDEN_01: {
-    name: { en: 'HopEden No. 1', ko: '홉이든 1호' },
-    description: { en: 'HopEden breeding line adapted to Korean climate', ko: '자체 육종, 국내 기후 적응' },
+    name: { en: 'HOPEDEN No. 1', ko: '홉이든 1호' },
+    description: { en: 'HOPEDEN breeding line adapted to Korean climate', ko: '자체 육종, 국내 기후 적응' },
   },
 }
 

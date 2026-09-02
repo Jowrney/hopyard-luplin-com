@@ -105,7 +105,7 @@ export function PDFExportModal({ onClose }: { onClose: () => void }) {
       }
 
       const documentLabel = text('Estimate', '견적서')
-      pdf.save(`HopEden_${documentLabel}_${safeFilePart(resolvedDesignName)}_${new Date().toISOString().slice(0, 10)}.pdf`)
+      pdf.save(`HOPEDEN_${documentLabel}_${safeFilePart(resolvedDesignName)}_${new Date().toISOString().slice(0, 10)}.pdf`)
       setDone(true)
       setTimeout(onClose, 1500)
     } catch (error) {
@@ -201,8 +201,8 @@ export function PDFExportModal({ onClose }: { onClose: () => void }) {
                }}>
             <div style={{ background: '#1A2E18', padding: '24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 4 }}>HopEden Designer</div>
-                <div style={{ color: '#8BA888', fontSize: 11 }}>{text('Hop trellis design & cost estimation platform | HopEden Agricultural Corporation', '홉 시설설계 & 비용산출 플랫폼 | 농업회사법인 홉이든')}</div>
+                <div style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 4 }}>HOPEDEN Designer</div>
+                <div style={{ color: '#8BA888', fontSize: 11 }}>{text('Hop trellis design & cost estimation platform | HOPEDEN Agricultural Corporation', '홉 시설설계 & 비용산출 플랫폼 | 농업회사법인 홉이든')}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ color: '#fff', fontSize: 15, fontWeight: 'bold', marginBottom: 4 }}>{text('FACILITY DESIGN ESTIMATE', '시설설계 견적서')}</div>
@@ -394,12 +394,12 @@ export function PDFExportModal({ onClose }: { onClose: () => void }) {
 
               <div style={{ background: '#1A2E18', borderRadius: 8, padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>{text('HopEden Agricultural Corporation', '농업회사법인 홉이든')}</div>
-                  <div style={{ color: '#8BA888', fontSize: 10, marginTop: 2 }}>hopeden.kr</div>
+                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>{text('HOPEDEN Agricultural Corporation', '농업회사법인 홉이든')}</div>
+                  <div style={{ color: '#8BA888', fontSize: 10, marginTop: 2 }}>hopeden.com</div>
                 </div>
                 <div style={{ color: '#8BA888', fontSize: 9, textAlign: 'right' }}>
                   <div>{text('Attach this estimate to your inquiry for a faster response.', '이 견적서를 첨부하여 문의해 주시면 빠르게 안내드립니다.')}</div>
-                  <div style={{ color: '#4ADE80', fontWeight: 'bold', marginTop: 2 }}>{text("HopEden Designer - Korea's digital standard for hop farming", 'HopEden Designer - 한국 홉 농업의 디지털 표준')}</div>
+                  <div style={{ color: '#4ADE80', fontWeight: 'bold', marginTop: 2 }}>{text("HOPEDEN Designer - Korea's digital standard for hop farming", 'HOPEDEN Designer - 한국 홉 농업의 디지털 표준')}</div>
                 </div>
               </div>
             </div>

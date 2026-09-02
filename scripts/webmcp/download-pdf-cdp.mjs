@@ -38,7 +38,7 @@ await call('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath, eve
 await evaluate(`localStorage.setItem('hopeden.locale', ${JSON.stringify(locale)}); location.reload(); true`)
 await wait(5000)
 const opened = await evaluate(`(async () => {
-  const button = [...document.querySelectorAll('button')].find((node) => /Estimate PDF|견적서 PDF/i.test(node.textContent || ''));
+  const button = [...document.querySelectorAll('button')].find((node) => /Estimate PDF|견적서(?: PDF)?/i.test(node.textContent || ''));
   button?.click();
   if (!button) return false;
   for (let index = 0; index < 30; index += 1) {
