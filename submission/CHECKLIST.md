@@ -6,8 +6,8 @@
 - [x] Public judge route without authentication
 - [x] WebMCP available through production Origin Trial
 - [x] English product UI and testing instructions
-- [ ] Change the GitHub repository visibility to Public (anonymous access currently returns 404)
-- [x] Repository contains source, assets, setup instructions, and MIT `LICENSE`
+- [x] GitHub repository is Public and anonymously accessible
+- [x] Repository contains source, assets, setup instructions, and a root MIT `LICENSE`
 - [x] Clear existing-versus-challenge work documentation
 - [x] English text-description draft
 - [x] Under-three-minute demo script with English narration
@@ -16,12 +16,12 @@
 - [ ] Upload the final video to YouTube as Public
 - [x] Replace the repository placeholder in submission drafts
 - [ ] Add the public YouTube URL to Devpost
-- [ ] Confirm the repository About section detects the MIT license
+- [x] GitHub detects the MIT license at the repository root
 - [ ] Submit before the official deadline
 
 ## Devpost text fields
 
-Use `submission/DEVPOST.md` as the source for:
+Use `submission/DEVPOST-FORM.md` as the paste-ready source for the visible form fields. Use `submission/DEVPOST.md` for additional technical testing details:
 
 1. Why the use case fits WebMCP
 2. How WebMCP creates a better user experience

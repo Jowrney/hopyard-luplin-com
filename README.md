@@ -1,11 +1,11 @@
-# 🌿 HOPEDEN Designer
+# 🌿 Hopyard Designer
 
 > Hopyard trellis planning and cost estimation
 > Built by HOPEDEN Agricultural Corporation
 
 ## OpenAI WebMCP Challenge
 
-HOPEDEN Designer is an existing human-operated hopyard planning application being extended during the 2026 OpenAI WebMCP Challenge into a shared human-agent design workspace.
+Hopyard Designer by HOPEDEN is an existing human-operated hopyard planning application extended during the 2026 OpenAI WebMCP Challenge into a shared human-agent design workspace.
 
 ### What was added for the challenge
 
