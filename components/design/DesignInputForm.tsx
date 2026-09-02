@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { WindRegion, TrainingType } from '@/types'
 import type { LaborCosts } from '@/stores/designStore'
 import { useState, useRef, useEffect } from 'react'
+import { getRegionalProfile } from '@/lib/design/regional-profiles'
 
 // ── 지역/와이어 단수 옵션 ──────────────────────────────
 const REGION_OPTIONS: { value: WindRegion; label: string; wind: string }[] = [
@@ -581,7 +582,7 @@ function SkeletonList() {
 // ── 메인 컴포넌트 ─────────────────────────────────────
 export function DesignInputForm() {
   const {
-    inputs, selectedPoleCode, selectedWireCode, selectedAnchorCode,
+    profileId, inputs, selectedPoleCode, selectedWireCode, selectedAnchorCode,
     selectedVarietyCode, includeLabor, includeVat, laborCosts, setLaborCosts,
     discountAmount, discountMemo, setDiscount,
     quantities,
@@ -706,6 +707,8 @@ export function DesignInputForm() {
   const wires   = categories.find((c) => c.code === 'WIRE')?.materials ?? []
   const anchors = categories.find((c) => c.code === 'ANCHOR')?.materials ?? []
   const areaM2  = inputs.widthM * inputs.heightM
+  const activeProfile = getRegionalProfile(profileId)
+  const profileMaterialName = (code: string) => activeProfile.materials.find((material) => material.code === code)?.name
 
   return (
     <FormWrapper>
@@ -732,7 +735,7 @@ export function DesignInputForm() {
       <Section title="폴(지주) 선택" icon="🏗️">
         <DropdownWrap ref={poleRef}>
           <DropdownBtn onClick={() => setPoleOpen(v=>!v)}>
-            <span>{poles.find(p=>p.code===selectedPoleCode)?.name ?? '폴 선택'}</span>
+            <span>{poles.find(p=>p.code===selectedPoleCode)?.name ?? profileMaterialName(selectedPoleCode) ?? '폴 선택'}</span>
             <DropdownArrow $open={poleOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {poleOpen && (
@@ -765,7 +768,7 @@ export function DesignInputForm() {
       <Section title="와이어 선택" icon="🔗">
         <DropdownWrap ref={wireRef}>
           <DropdownBtn onClick={() => setWireOpen(v=>!v)}>
-            <span>{wires.find(w=>w.code===selectedWireCode)?.name ?? '와이어 선택'}</span>
+            <span>{wires.find(w=>w.code===selectedWireCode)?.name ?? profileMaterialName(selectedWireCode) ?? '와이어 선택'}</span>
             <DropdownArrow $open={wireOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {wireOpen && (
@@ -791,7 +794,7 @@ export function DesignInputForm() {
       <Section title="앵커(지박) 선택" icon="⚓">
         <DropdownWrap>
           <DropdownBtn onClick={() => setAnchorOpen(v=>!v)}>
-            <span>{anchors.find(a=>a.code===selectedAnchorCode)?.name ?? '앵커 선택'}</span>
+            <span>{anchors.find(a=>a.code===selectedAnchorCode)?.name ?? profileMaterialName(selectedAnchorCode) ?? '앵커 선택'}</span>
             <DropdownArrow $open={anchorOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {anchorOpen && (
@@ -917,30 +920,36 @@ export function DesignInputForm() {
 
       {/* 7. 지역 */}
       <Section title="지역 설정 (풍하중 기준)" icon="💨">
-        <DropdownWrap ref={regionRef}>
-          <DropdownBtn onClick={() => setRegionOpen(v=>!v)}>
-            <span>
-              {REGION_OPTIONS.find(o=>o.value===inputs.region)?.label ?? '지역 선택'}
-              {' '}
-              <span style={{fontSize:'0.75rem',color:'#6b7280'}}>
-                기본풍속 {REGION_OPTIONS.find(o=>o.value===inputs.region)?.wind}
+        {activeProfile.loadModel === 'local-engineering-required' ? (
+          <InfoBox>
+            북미 reference profile은 지역별 풍하중·토질·법규에 따른 현지 구조 검토가 필요합니다.
+          </InfoBox>
+        ) : (
+          <DropdownWrap ref={regionRef}>
+            <DropdownBtn onClick={() => setRegionOpen(v=>!v)}>
+              <span>
+                {REGION_OPTIONS.find(o=>o.value===inputs.region)?.label ?? '지역 선택'}
+                {' '}
+                <span style={{fontSize:'0.75rem',color:'#6b7280'}}>
+                  기본풍속 {REGION_OPTIONS.find(o=>o.value===inputs.region)?.wind}
+                </span>
               </span>
-            </span>
-            <DropdownArrow $open={regionOpen}>▼</DropdownArrow>
-          </DropdownBtn>
-          {regionOpen && (
-            <DropdownMenu>
-              {REGION_OPTIONS.map(opt => (
-                <DropdownItem key={opt.value} $selected={inputs.region===opt.value}
-                              onClick={() => { updateInputs({ region: opt.value }); setRegionOpen(false) }}>
-                  <DropdownItemName>{opt.label}</DropdownItemName>
-                  <DropdownItemSub>기본풍속 {opt.wind}</DropdownItemSub>
-                  {inputs.region===opt.value && <DropdownCheck>✓</DropdownCheck>}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          )}
-        </DropdownWrap>
+              <DropdownArrow $open={regionOpen}>▼</DropdownArrow>
+            </DropdownBtn>
+            {regionOpen && (
+              <DropdownMenu>
+                {REGION_OPTIONS.map(opt => (
+                  <DropdownItem key={opt.value} $selected={inputs.region===opt.value}
+                                onClick={() => { updateInputs({ region: opt.value }); setRegionOpen(false) }}>
+                    <DropdownItemName>{opt.label}</DropdownItemName>
+                    <DropdownItemSub>기본풍속 {opt.wind}</DropdownItemSub>
+                    {inputs.region===opt.value && <DropdownCheck>✓</DropdownCheck>}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            )}
+          </DropdownWrap>
+        )}
       </Section>
 
       {/* 7. 견적 옵션 */}

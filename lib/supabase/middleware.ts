@@ -2,8 +2,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isGuestDemoPath, isProtectedAppPath } from '@/lib/auth/routes'
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  if (isGuestDemoPath(pathname)) return NextResponse.next({ request })
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -38,11 +42,8 @@ export async function updateSession(request: NextRequest) {
 
   // 세션 갱신 (반드시 호출해야 토큰 자동 갱신됨)
   const { data: { user } } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
-
   // 보호 경로 — 비로그인 시 /login으로
-  const protectedPaths = ['/design', '/projects', '/admin']
-  if (protectedPaths.some((p) => pathname.startsWith(p)) && !user) {
+  if (isProtectedAppPath(pathname) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('callbackUrl', pathname)

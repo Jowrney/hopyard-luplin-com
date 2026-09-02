@@ -1,5 +1,6 @@
 // app/api/admin/materials/route.ts
 import { NextResponse } from 'next/server'
+import { REFERENCE_MATERIAL_CATEGORIES } from '@/lib/catalog/reference-catalog'
 
 export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
@@ -37,10 +38,18 @@ export async function GET() {
         })),
     }))
 
-    return NextResponse.json({ success: true, data: mapped })
+    if (mapped.length === 0) {
+      return NextResponse.json({ success: true, data: REFERENCE_MATERIAL_CATEGORIES, dataSource: 'reference-catalog' })
+    }
+    return NextResponse.json({ success: true, data: mapped, dataSource: 'database' })
   } catch (e) {
     console.error('materials GET error:', e)
-    return NextResponse.json({ success: false, error: String(e), data: [] })
+    return NextResponse.json({
+      success: true,
+      data: REFERENCE_MATERIAL_CATEGORIES,
+      dataSource: 'reference-catalog',
+      warning: 'Live material catalog unavailable; using the bundled reference catalog.',
+    })
   }
 }
 
