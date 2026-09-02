@@ -39,7 +39,7 @@ The application starts in English for challenge reviewers. Use the `EN / 한국�
 | `apply_candidate` | Keep the preview as the active design after explicit user approval | Dynamic write |
 | `discard_preview` | Restore the exact design from before the preview | Dynamic write |
 
-ChatGPT's in-app browser supports the required imperative API directly. For Chrome 149+, enable `chrome://flags/#enable-webmcp-testing` and relaunch Chrome.
+ChatGPT Desktop supports the required imperative API directly. The production origin is enrolled in Chrome's WebMCP Origin Trial through November 17, 2026, so Chrome 149–156 can activate the API without a local flag. For local development, enable `chrome://flags/#enable-webmcp-testing` and relaunch Chrome.
 
 ### Verify WebMCP in Chrome
 
