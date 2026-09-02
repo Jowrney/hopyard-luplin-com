@@ -90,7 +90,7 @@ export function DesignWebMCP() {
     name: 'simulate_design',
     description: 'Calculate a non-destructive hopyard alternative from optional changes. Returns a candidate ID for later comparison; it does not change the visible design.',
     inputSchema: SIMULATE_DESIGN_INPUT_SCHEMA,
-    annotations: { readOnlyHint: true },
+    annotations: { readOnlyHint: false },
     execute: (rawArgs: unknown) => {
       const args = parseSimulationToolArgs(rawArgs)
       const simulation = simulateDesign(currentSnapshot(), simulationArgsToPatch(args))
