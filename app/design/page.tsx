@@ -37,10 +37,7 @@ const PageWrapper = styled.div`
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    @media (max-width: 900px) {
-        height: auto;
-        min-height: 100dvh;
-    }
+    overflow: hidden;
 `
 
 const PageHeader = styled.header`
@@ -53,12 +50,9 @@ const PageHeader = styled.header`
     justify-content: space-between;
     z-index: 50;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    @media (max-width: 900px) {
-        position: sticky;
-        top: 0;
+    gap: 0.75rem;
+    @media (max-width: 1199px) {
         padding: 0.55rem 0.65rem;
-        flex-wrap: wrap;
-        gap: 0.45rem;
     }
 `
 
@@ -66,8 +60,8 @@ const HeaderLeft = styled.div`
     display: flex;
     align-items: center;
     gap: 1rem;
-    @media (max-width: 900px) {
-        width: 100%;
+    min-width: 0;
+    @media (max-width: 1199px) {
         gap: 0.5rem;
     }
 `
@@ -77,6 +71,9 @@ const HeaderLogo = styled(Link)`
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
+    flex-shrink: 1;
+    min-width: 0;
+    img { width: clamp(132px, 22vw, 178px) !important; }
 `
 
 
@@ -84,30 +81,55 @@ const HeaderDivider = styled.div`
     width: 1px;
     height: 1.25rem;
     background: #e5e7eb;
-    @media (max-width: 900px) { display: none; }
+    @media (max-width: 720px) { display: none; }
 `
 
 const PageLabel = styled.span`
     font-size: 0.875rem;
     color: #6b7280;
-    @media (max-width: 900px) {
-        margin-left: auto;
-        font-size: 0.72rem;
-    }
+    white-space: nowrap;
+    @media (max-width: 720px) { display: none; }
 `
 
 const HeaderRight = styled.div`
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    @media (max-width: 900px) {
-        width: 100%;
-        gap: 0.4rem;
-        overflow-x: auto;
-        padding-bottom: 0.1rem;
-        scrollbar-width: none;
-        &::-webkit-scrollbar { display: none; }
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-shrink: 0;
+`
+
+const PanelToggle = styled.button<{ $active:boolean }>`
+    display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.7rem;
+    border-radius:0.55rem;border:1px solid ${({$active})=>$active?'#86a882':'#dbe2db'};
+    background:${({$active})=>$active?'#F0F7EF':'white'};color:#2D5A27;
+    font:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;
+    &:hover{background:#F0F7EF;}
+    &:focus-visible{outline:2px solid #16a34a;outline-offset:2px;}
+`
+const PanelToggleLabel = styled.span`@media (max-width: 480px){display:none;}`
+
+const PanelBackdrop = styled.button<{ $visible:boolean }>`
+    display:none;
+    @media (max-width: 1199px) {
+        display:${({$visible})=>$visible?'block':'none'};
+        position:fixed;inset:0;z-index:210;border:0;background:rgba(15,23,42,0.42);
+        backdrop-filter:blur(2px);cursor:pointer;
     }
+`
+
+const PanelHeader = styled.div`
+    position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+    min-height:3rem;padding:0.65rem 0.85rem;background:#F8FAF7;border-bottom:1px solid #E8E4DC;
+`
+const PanelTitle = styled.strong`font-size:0.8rem;color:#1A2E18;`
+const PanelClose = styled.button`
+    width:2rem;height:2rem;border:1px solid #dbe2db;border-radius:0.45rem;background:white;
+    color:#475569;cursor:pointer;font-size:1rem;
+`
+const RightUtilities = styled.div`
+    padding:0.7rem;border-bottom:1px solid #E8E4DC;display:flex;flex-wrap:wrap;gap:0.45rem;
+    align-items:center;background:white;
 `
 
 const PriceLoadingText = styled.span`
@@ -151,24 +173,28 @@ const Body = styled.div`
     display: flex;
     flex: 1;
     min-height: 0;
-    @media (max-width: 900px) {
-        flex-direction: column;
-        min-height: auto;
-    }
+    position: relative;
 `
 
-const LeftPanel = styled.aside`
+const LeftPanel = styled.aside<{ $open:boolean }>`
     flex-shrink: 0;
-    width: 400px;
+    display:${({$open})=>$open?'block':'none'};
+    width:min(400px,32vw);
     background: white;
     border-right: 1px solid #E8E4DC;
     overflow-y: auto;
     min-height: 0;
-    @media (max-width: 900px) {
-        width: 100%;
-        overflow: visible;
-        border-right: 0;
-        border-bottom: 1px solid #E8E4DC;
+    @media (max-width: 1199px) {
+        display:block;
+        position:fixed;
+        inset:0 auto 0 0;
+        width:min(88vw,400px);
+        z-index:220;
+        transform: translateX(${({$open})=>$open?'0':'-105%'});
+        visibility:${({$open})=>$open?'visible':'hidden'};
+        pointer-events:${({$open})=>$open?'auto':'none'};
+        transition:transform 0.22s ease;
+        box-shadow:18px 0 45px rgba(15,23,42,0.2);
     }
 `
 
@@ -178,12 +204,6 @@ const CenterPanel = styled.main`
     flex: 1;
     min-width: 0;
     min-height: 0;
-    @media (max-width: 900px) {
-        flex: none;
-        width: 100%;
-        height: 70dvh;
-        min-height: 520px;
-    }
 `
 
 const ViewToolbar = styled.div`
@@ -232,9 +252,9 @@ const ChipsRow = styled.div`
     @media (max-width: 900px) {
         width: 100%;
         order: 3;
-        overflow-x: auto;
-        padding-bottom: 0.1rem;
-        & > * { flex-shrink: 0; }
+        flex-wrap: wrap;
+        overflow: visible;
+        gap: 0.35rem;
     }
 `
 
@@ -276,18 +296,25 @@ const CanvasLayer = styled.div<{ $visible: boolean }>`
     display: ${({ $visible }) => ($visible ? 'block' : 'none')};
 `
 
-const RightPanel = styled.aside`
+const RightPanel = styled.aside<{ $open:boolean }>`
     flex-shrink: 0;
-    width: 340px;
+    display:${({$open})=>$open?'block':'none'};
+    width:min(360px,30vw);
     background: white;
     border-left: 1px solid #E8E4DC;
     overflow-y: auto;
     min-height: 0;
-    @media (max-width: 900px) {
-        width: 100%;
-        overflow: visible;
-        border-left: 0;
-        border-top: 1px solid #E8E4DC;
+    @media (max-width: 1199px) {
+        display:block;
+        position:fixed;
+        inset:0 0 0 auto;
+        width:min(92vw,380px);
+        z-index:220;
+        transform: translateX(${({$open})=>$open?'0':'105%'});
+        visibility:${({$open})=>$open?'visible':'hidden'};
+        pointer-events:${({$open})=>$open?'auto':'none'};
+        transition:transform 0.22s ease;
+        box-shadow:-18px 0 45px rgba(15,23,42,0.2);
     }
 `
 
@@ -344,6 +371,8 @@ export default function DesignPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('2d')
   const [showPDF, setShowPDF] = useState(false)
   const [showSave, setShowSave] = useState(false)
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false)
+  const [rightPanelOpen, setRightPanelOpen] = useState(false)
   const [userName, setUserName] = useState<string | undefined>()
   const canvasAreaRef = useRef<HTMLDivElement>(null)
 
@@ -414,6 +443,44 @@ export default function DesignPage() {
     })
   }, [fetchPrices, isDemo]) // eslint-disable-line
 
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1200px)')
+    const syncPanels = () => {
+      setLeftPanelOpen(desktop.matches)
+      setRightPanelOpen(desktop.matches)
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLeftPanelOpen(false)
+        setRightPanelOpen(false)
+      }
+    }
+    syncPanels()
+    desktop.addEventListener('change', syncPanels)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      desktop.removeEventListener('change', syncPanels)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [])
+
+  const toggleLeftPanel = () => {
+    if (window.innerWidth < 1200 && !leftPanelOpen) setRightPanelOpen(false)
+    setLeftPanelOpen((open) => !open)
+  }
+  const toggleRightPanel = () => {
+    if (window.innerWidth < 1200 && !rightPanelOpen) setLeftPanelOpen(false)
+    setRightPanelOpen((open) => !open)
+  }
+  const openPDF = () => {
+    setRightPanelOpen(false)
+    setShowPDF(true)
+  }
+  const openSave = () => {
+    setRightPanelOpen(false)
+    setShowSave(true)
+  }
+
   return (
     <PageWrapper>
       <PageHeader>
@@ -426,18 +493,39 @@ export default function DesignPage() {
         </HeaderLeft>
 
         <HeaderRight>
-          <LanguageSwitcher />
-          <DesignWebMCP />
-          <SafetyBadge />
-          {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
-          <OutlineButton onClick={() => setShowPDF(true)}>📄 {text('Estimate PDF', '견적서 PDF')}</OutlineButton>
-          {!isDemo && <PrimaryButton onClick={() => setShowSave(true)}>💾 {text('Save design', '설계 저장')}</PrimaryButton>}
-          {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
+          <PanelToggle
+            type="button"
+            $active={leftPanelOpen}
+            aria-controls="design-input-panel"
+            aria-expanded={leftPanelOpen}
+            onClick={toggleLeftPanel}
+          >
+            <span>☰</span><PanelToggleLabel>{text('Design inputs', '설계 입력')}</PanelToggleLabel>
+          </PanelToggle>
+          <PanelToggle
+            type="button"
+            $active={rightPanelOpen}
+            aria-controls="design-review-panel"
+            aria-expanded={rightPanelOpen}
+            onClick={toggleRightPanel}
+          >
+            <span>▤</span><PanelToggleLabel>{text('Review & estimate', '검토 및 견적')}</PanelToggleLabel>
+          </PanelToggle>
         </HeaderRight>
       </PageHeader>
 
       <Body>
-        <LeftPanel>
+        <PanelBackdrop
+          type="button"
+          $visible={leftPanelOpen || rightPanelOpen}
+          aria-label={text('Close open panel', '열린 패널 닫기')}
+          onClick={() => { setLeftPanelOpen(false); setRightPanelOpen(false) }}
+        />
+        <LeftPanel id="design-input-panel" $open={leftPanelOpen} aria-hidden={!leftPanelOpen}>
+          <PanelHeader>
+            <PanelTitle>{text('Design inputs', '설계 입력')}</PanelTitle>
+            <PanelClose type="button" onClick={() => setLeftPanelOpen(false)} aria-label={text('Close design inputs', '설계 입력 닫기')}>×</PanelClose>
+          </PanelHeader>
           <DesignInputForm />
         </LeftPanel>
 
@@ -470,8 +558,21 @@ export default function DesignPage() {
           </CanvasArea>
         </CenterPanel>
 
-        <RightPanel>
-          <EstimatePanel onPDFClick={() => setShowPDF(true)} />
+        <RightPanel id="design-review-panel" $open={rightPanelOpen} aria-hidden={!rightPanelOpen}>
+          <PanelHeader>
+            <PanelTitle>{text('Review & estimate', '검토 및 견적')}</PanelTitle>
+            <PanelClose type="button" onClick={() => setRightPanelOpen(false)} aria-label={text('Close review panel', '검토 패널 닫기')}>×</PanelClose>
+          </PanelHeader>
+          <RightUtilities>
+            <LanguageSwitcher />
+            <DesignWebMCP />
+            <SafetyBadge />
+            {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
+            <OutlineButton onClick={openPDF}>📄 {text('Estimate PDF', '견적서 PDF')}</OutlineButton>
+            {!isDemo && <PrimaryButton onClick={openSave}>💾 {text('Save design', '설계 저장')}</PrimaryButton>}
+            {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
+          </RightUtilities>
+          <EstimatePanel onPDFClick={openPDF} />
         </RightPanel>
       </Body>
 
