@@ -77,7 +77,7 @@ def main() -> None:
         current = f'v{offset - 1}'
         start = item['start']
         end = item['end']
-        y_position = '78' if item['scene'] in {'compare', 'human-choice', 'preview', 'approval', 'integrity'} else 'H-h-34'
+        y_position = '78' if item['scene'] in {'compare', 'human-choice', 'preview', 'approval', 'integrity', 'impact'} else 'H-h-34'
         filters.append(
             f'[{previous}][{offset}:v]overlay=(W-w)/2:{y_position}:eof_action=pass:'
             f"enable='between(t,{start},{end})'[{current}]"

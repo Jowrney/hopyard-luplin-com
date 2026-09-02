@@ -69,7 +69,7 @@ def main() -> None:
         'pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#0f172a,tpad=stop_mode=clone:stop_duration=3[v0]'
     ]
     previous = 'v0'
-    top_scenes = {'compare', 'human-choice', 'preview', 'approval', 'integrity'}
+    top_scenes = {'compare', 'human-choice', 'preview', 'approval', 'integrity', 'impact'}
     for offset, timing in enumerate(timings, start=2):
         current = f'v{offset - 1}'
         y_position = '78' if timing['scene'] in top_scenes else 'H-h-34'
