@@ -155,7 +155,7 @@ export const useDesignStore = create<DesignStore>()(
           }) : null
           set({ quantities, loads, estimate, isCalculating: false })
         } catch (error) {
-          console.error('계산 오류:', error)
+          console.error('Design calculation error:', error)
           set({ isCalculating: false })
         }
       },

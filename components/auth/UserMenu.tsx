@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { createClient } from '@/lib/supabase/client'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 // ── 스타일 ──────────────────────────────────────────
 const Wrapper = styled.div`
@@ -118,6 +119,7 @@ interface UserMenuProps {
 }
 
 export default function UserMenu({ userName, userEmail }: UserMenuProps) {
+  const { text } = useLocale()
   const [open, setOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
@@ -144,26 +146,26 @@ export default function UserMenu({ userName, userEmail }: UserMenuProps) {
     <Wrapper>
       <TriggerButton onClick={() => setOpen((v) => !v)}>
         <Avatar>{initial}</Avatar>
-        <span>{userName ?? '사용자'}</span>
+        <span>{userName ?? text('User', '사용자')}</span>
         <span>{open ? '▲' : '▼'}</span>
       </TriggerButton>
 
       {open && (
         <Dropdown>
           <DropdownHeader>
-            <UserName>{userName ?? '사용자'}</UserName>
+            <UserName>{userName ?? text('User', '사용자')}</UserName>
             <UserEmail>{userEmail}</UserEmail>
             {isAdmin && <RoleBadge>🔒 ADMIN</RoleBadge>}
           </DropdownHeader>
 
-          <DropdownItem onClick={() => go('/projects')}>📁 내 프로젝트</DropdownItem>
-          <DropdownItem onClick={() => go('/design')}>✏️ 새 설계</DropdownItem>
+          <DropdownItem onClick={() => go('/projects')}>📁 {text('My projects', '내 프로젝트')}</DropdownItem>
+          <DropdownItem onClick={() => go('/design')}>✏️ {text('New design', '새 설계')}</DropdownItem>
 
           {isAdmin && (
-            <AdminItem onClick={() => go('/admin')}>⚙️ 관리자 페이지</AdminItem>
+            <AdminItem onClick={() => go('/admin')}>⚙️ {text('Admin', '관리자 페이지')}</AdminItem>
           )}
 
-          <LogoutItem onClick={handleLogout}>🚪 로그아웃</LogoutItem>
+          <LogoutItem onClick={handleLogout}>🚪 {text('Log out', '로그아웃')}</LogoutItem>
         </Dropdown>
       )}
     </Wrapper>

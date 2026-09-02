@@ -4,6 +4,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 const PADDING = 60
 
@@ -80,6 +81,7 @@ export function FarmCanvas2D() {
   const [isDragging,setIsDragging]=useState(false)
   const dragStart=useRef({x:0,y:0,ox:0,oy:0})
   const {inputs,quantities}=useDesignStore()
+  const {text,number}=useLocale()
 
   const getAutoScale=useCallback(()=>{
     const el=containerRef.current;if(!el)return 1
@@ -211,14 +213,14 @@ export function FarmCanvas2D() {
     ctx.strokeStyle='#94A3B8';ctx.lineWidth=1;ctx.fillStyle='#94A3B8';ctx.setLineDash([])
     ctx.font='11px system-ui';ctx.textAlign='center'
     ctx.beginPath();ctx.moveTo(oX,oY-22);ctx.lineTo(oX+farmW,oY-22);ctx.stroke()
-    ctx.fillText(`← ${lastMastX}m →`,oX+farmW/2,oY-27)
+    ctx.fillText(`← ${number(lastMastX)}m →`,oX+farmW/2,oY-27)
     ctx.save();ctx.translate(oX-32,oY+farmH/2);ctx.rotate(-Math.PI/2)
-    ctx.fillText(`← ${lastMastZ}m →`,0,0);ctx.restore()
+    ctx.fillText(`← ${number(lastMastZ)}m →`,0,0);ctx.restore()
 
     // 마스트 간격 표시
     if(scale>0.3&&mastXs.length>1){
       ctx.fillStyle='#666';ctx.font=`${Math.max(8,9*scale*0.4)}px system-ui`;ctx.textAlign='center'
-      ctx.fillText(`${MAST_SPAN}m`,oX+MAST_SPAN*scale/2,oY-10)
+      ctx.fillText(`${number(MAST_SPAN)}m`,oX+MAST_SPAN*scale/2,oY-10)
     }
 
     // ── 폴 & 앵커 렌더링 ─────────────────────────
@@ -272,7 +274,7 @@ export function FarmCanvas2D() {
     ctx.fillStyle='#94A3B8';ctx.font='bold 12px system-ui';ctx.textAlign='left'
     ctx.fillText('N↑',oX+farmW+14,oY+4)
 
-  },[inputs,quantities,scale,offset])
+  },[inputs,number,quantities,scale,offset])
 
   useEffect(()=>{
     const el=containerRef.current;if(!el)return
@@ -287,30 +289,30 @@ export function FarmCanvas2D() {
 
   return (
     <Wrapper ref={containerRef}>
-      <Canvas ref={canvasRef} $dragging={isDragging}
+      <Canvas ref={canvasRef} $dragging={isDragging} aria-label={text('2D hop yard plan', '홉 농장 2D 평면도')}
               onMouseDown={onMouseDown} onMouseMove={onMouseMove}
               onMouseUp={onMouseUp} onMouseLeave={onMouseUp} onWheel={onWheel}/>
       <ZoomControls>
-        <ZoomBtn onClick={()=>setScale(s=>Math.min(10,s*1.2))}>+</ZoomBtn>
-        <FitBtn onClick={fitToScreen} title="화면 맞춤">⊡</FitBtn>
-        <ZoomBtn onClick={()=>setScale(s=>Math.max(0.2,s*0.8))}>−</ZoomBtn>
+        <ZoomBtn onClick={()=>setScale(s=>Math.min(10,s*1.2))} aria-label={text('Zoom in', '확대')}>+</ZoomBtn>
+        <FitBtn onClick={fitToScreen} title={text('Fit to screen', '화면 맞춤')} aria-label={text('Fit to screen', '화면 맞춤')}>⊡</FitBtn>
+        <ZoomBtn onClick={()=>setScale(s=>Math.max(0.2,s*0.8))} aria-label={text('Zoom out', '축소')}>−</ZoomBtn>
       </ZoomControls>
       <Legend>
-        <LRow><LDot $color="#1A1A1A" $ring/>Mast (내부 수직)</LRow>
-        <LRow><LDot $color="#CC0000"/>Mast + Anchor (외곽 경사)</LRow>
-        <LRow><LLine $color="rgba(10,10,10,0.75)"/>메인 와이어</LRow>
-        <LRow><LLine $color="rgba(50,50,50,0.4)"/>보조 유인 와이어 (±80cm)</LRow>
-        <LRow><LLine $color="rgba(204,0,0,0.7)"/>앵커 와이어</LRow>
-        <LRow><LLine $color="rgba(59,130,246,0.6)"/>수로 (Ditch)</LRow>
-        <LRow><LDot $color="rgba(34,120,34,0.8)"/>홉 (1m 간격, 폴서 50cm)</LRow>
+        <LRow><LDot $color="#1A1A1A" $ring/>{text('Mast (interior vertical)', '마스트 (내부 수직)')}</LRow>
+        <LRow><LDot $color="#CC0000"/>{text('Mast + anchor (perimeter inclined)', '마스트 + 앵커 (외곽 경사)')}</LRow>
+        <LRow><LLine $color="rgba(10,10,10,0.75)"/>{text('Main wire', '메인 와이어')}</LRow>
+        <LRow><LLine $color="rgba(50,50,50,0.4)"/>{text('Training wire (±80 cm)', '보조 유인 와이어 (±80cm)')}</LRow>
+        <LRow><LLine $color="rgba(204,0,0,0.7)"/>{text('Anchor wire', '앵커 와이어')}</LRow>
+        <LRow><LLine $color="rgba(59,130,246,0.6)"/>{text('Ditch', '수로')}</LRow>
+        <LRow><LDot $color="rgba(34,120,34,0.8)"/>{text('Hops (1 m spacing, 50 cm from pole)', '홉 (1m 간격, 폴에서 50cm)')}</LRow>
       </Legend>
       <ScaleLabel>
-        {Math.round(scale/getAutoScale()*100)}%
+        {number(Math.round(scale/getAutoScale()*100))}%
       </ScaleLabel>
       {!quantities&&(
         <EmptyState><EmptyInner>
           <EmptyIcon>🗺️</EmptyIcon>
-          <EmptyText>설계 정보를 입력하면 평면도가 생성됩니다</EmptyText>
+          <EmptyText>{text('Enter design information to generate the plan.', '설계 정보를 입력하면 평면도가 생성됩니다.')}</EmptyText>
         </EmptyInner></EmptyState>
       )}
     </Wrapper>

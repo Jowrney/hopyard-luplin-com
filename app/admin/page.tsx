@@ -4,6 +4,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import styled from 'styled-components'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { useLocale } from '@/components/i18n/LocaleProvider'
+import { getEstimateItemLabel, getUnitLabel, getVarietyDescription, getVarietyName } from '@/lib/i18n'
 
 // ── 타입 ──────────────────────────────────────────────
 interface Material {
@@ -14,11 +17,10 @@ interface MaterialCategory {
   id: number; code: string; name: string; materials: Material[]
 }
 interface HopVariety {
-  id: string; code: string; name: string; characteristics: string | null
+  id: string; code: string; name: string; nameKo?: string | null; characteristics: string | null
   unitPrice: number; isActive: boolean; isOwnBrand: boolean
 }
 
-const KRW = (n: number) => `₩${n.toLocaleString('ko-KR')}`
 const CAT_ICON: Record<string, string> = {
   POLE: '🏗️', WIRE: '🔗', CLIP: '🔩', ANCHOR: '⚓', LABOR: '👷',
 }
@@ -311,9 +313,10 @@ function MaterialsTable({ categories, onEdit }: {
   categories: MaterialCategory[]
   onEdit: (m: Material) => void
 }) {
+  const { locale, text, currency, number } = useLocale()
   const [openCats, setOpenCats] = useState<Set<string>>(new Set(categories.map((c) => c.code)))
 
-  if (categories.length === 0) return <EmptyBox><p style={{ color: '#6b7280' }}>🔍 검색 결과가 없습니다</p></EmptyBox>
+  if (categories.length === 0) return <EmptyBox><p style={{ color: '#6b7280' }}>🔍 {text('No results found', '검색 결과가 없습니다')}</p></EmptyBox>
 
   return (
     <div>
@@ -327,8 +330,14 @@ function MaterialsTable({ categories, onEdit }: {
             <CatInfo>
               <CatIcon>{CAT_ICON[cat.code] ?? '📦'}</CatIcon>
               <span>
-                <CatName>{cat.name}</CatName>
-                <CatCount>{cat.materials.length}개 항목</CatCount>
+                <CatName>{({
+                  POLE: text('Poles', '폴(지주)'),
+                  WIRE: text('Wire', '와이어'),
+                  ANCHOR: text('Anchors', '앵커'),
+                  CLIP: text('Connection hardware', '연결부속'),
+                  LABOR: text('Installation', '시공비'),
+                } as Record<string,string>)[cat.code] ?? cat.name}</CatName>
+                <CatCount>{number(cat.materials.length)} {text('items', '개 항목')}</CatCount>
               </span>
             </CatInfo>
             <CatArrow>{openCats.has(cat.code) ? '▲' : '▼'}</CatArrow>
@@ -338,25 +347,25 @@ function MaterialsTable({ categories, onEdit }: {
             <Table>
               <Thead>
                 <tr>
-                  <Th>품명</Th>
-                  <Th>규격</Th>
-                  <Th>코드</Th>
-                  <Th $align="center">단위</Th>
-                  <Th $align="right">현재 단가</Th>
-                  <Th $align="center">상태</Th>
-                  <Th $align="center">수정</Th>
+                  <Th>{text('Item', '품명')}</Th>
+                  <Th>{text('Specification', '규격')}</Th>
+                  <Th>{text('Code', '코드')}</Th>
+                  <Th $align="center">{text('Unit', '단위')}</Th>
+                  <Th $align="right">{text('Current price', '현재 단가')}</Th>
+                  <Th $align="center">{text('Status', '상태')}</Th>
+                  <Th $align="center">{text('Edit', '수정')}</Th>
                 </tr>
               </Thead>
               <Tbody>
                 {cat.materials.map((m, i) => (
                   <Tr key={m.id} $odd={i % 2 !== 0}>
-                    <Td><ItemName>{m.name}</ItemName></Td>
-                    <Td><ItemSpec>{m.spec ?? '—'}</ItemSpec></Td>
+                    <Td><ItemName>{getEstimateItemLabel(m.code, m.name, locale)}</ItemName></Td>
+                    <Td><ItemSpec>{locale === 'en' && /[가-힣]/.test(m.spec ?? '') ? 'Catalog specification' : m.spec ?? '—'}</ItemSpec></Td>
                     <Td><CodeBadge>{m.code}</CodeBadge></Td>
-                    <Td $align="center"><UnitText>{m.unit}</UnitText></Td>
-                    <Td $align="right"><PriceText>{KRW(m.unitPrice)}</PriceText></Td>
-                    <Td $align="center"><ActiveBadge $active={m.isActive}>{m.isActive ? '활성' : '비활성'}</ActiveBadge></Td>
-                    <Td $align="center"><EditButton onClick={() => onEdit(m)}>수정</EditButton></Td>
+                    <Td $align="center"><UnitText>{getUnitLabel(m.unit, locale)}</UnitText></Td>
+                    <Td $align="right"><PriceText>{currency(m.unitPrice, 'KRW')}</PriceText></Td>
+                    <Td $align="center"><ActiveBadge $active={m.isActive}>{m.isActive ? text('Active', '활성') : text('Inactive', '비활성')}</ActiveBadge></Td>
+                    <Td $align="center"><EditButton onClick={() => onEdit(m)}>{text('Edit', '수정')}</EditButton></Td>
                   </Tr>
                 ))}
               </Tbody>
@@ -372,19 +381,20 @@ function VarietiesTable({ varieties, onEdit }: {
   varieties: HopVariety[]
   onEdit: (v: HopVariety) => void
 }) {
-  if (varieties.length === 0) return <EmptyBox><p style={{ color: '#6b7280' }}>🔍 검색 결과가 없습니다</p></EmptyBox>
+  const { locale, text, currency } = useLocale()
+  if (varieties.length === 0) return <EmptyBox><p style={{ color: '#6b7280' }}>🔍 {text('No results found', '검색 결과가 없습니다')}</p></EmptyBox>
 
   return (
     <TableCard>
       <Table>
         <Thead>
           <tr style={{ background: '#F8FAF7' }}>
-            <Th>품종명</Th>
-            <Th>특성</Th>
-            <Th>코드</Th>
-            <Th $align="center">홉이든 자체</Th>
-            <Th $align="right">현재 단가</Th>
-            <Th $align="center">수정</Th>
+            <Th>{text('Variety', '품종명')}</Th>
+            <Th>{text('Characteristics', '특성')}</Th>
+            <Th>{text('Code', '코드')}</Th>
+            <Th $align="center">{text('HopEden original', '홉이든 자체')}</Th>
+            <Th $align="right">{text('Current price', '현재 단가')}</Th>
+            <Th $align="center">{text('Edit', '수정')}</Th>
           </tr>
         </Thead>
         <Tbody>
@@ -392,18 +402,18 @@ function VarietiesTable({ varieties, onEdit }: {
             <Tr key={v.id} $odd={i % 2 !== 0}>
               <Td>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ItemName>{v.name}</ItemName>
-                  {v.isOwnBrand && <OwnBrandBadge>홉이든</OwnBrandBadge>}
+                  <ItemName>{getVarietyName(v.code, locale === 'ko' ? v.nameKo ?? v.name : v.name, locale)}</ItemName>
+                  {v.isOwnBrand && <OwnBrandBadge>HopEden</OwnBrandBadge>}
                 </span>
               </Td>
-              <Td><ItemSpec style={{ maxWidth: '200px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.characteristics ?? '—'}</ItemSpec></Td>
+              <Td><ItemSpec style={{ maxWidth: '200px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getVarietyDescription(v.code, locale) || (locale === 'en' && /[가-힣]/.test(v.characteristics ?? '') ? '—' : v.characteristics ?? '—')}</ItemSpec></Td>
               <Td><CodeBadge>{v.code}</CodeBadge></Td>
               <Td $align="center">{v.isOwnBrand ? '⭐' : <span style={{ color: '#d1d5db' }}>—</span>}</Td>
               <Td $align="right">
-                <PriceText>{KRW(v.unitPrice)}</PriceText>
-                <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginLeft: '0.25rem' }}>/주</span>
+                <PriceText>{currency(v.unitPrice, 'KRW')}</PriceText>
+                <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginLeft: '0.25rem' }}>{text('/plant', '/주')}</span>
               </Td>
-              <Td $align="center"><EditButton onClick={() => onEdit(v)}>수정</EditButton></Td>
+              <Td $align="center"><EditButton onClick={() => onEdit(v)}>{text('Edit', '수정')}</EditButton></Td>
             </Tr>
           ))}
         </Tbody>
@@ -417,6 +427,7 @@ function EditMaterialModal({ data, onSave, onClose }: {
   onSave: (id: string, fields: Partial<Material>, reason: string) => void
   onClose: () => void
 }) {
+  const { text, currency } = useLocale()
   const [form, setForm] = useState({ name: data.name, spec: data.spec ?? '', unit: data.unit, unitPrice: data.unitPrice })
   const [reason, setReason] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -436,14 +447,14 @@ function EditMaterialModal({ data, onSave, onClose }: {
     <Overlay onClick={(e) => e.target === e.currentTarget && onClose()}>
       <Modal>
         <ModalHeader>
-          <div><ModalTitle>자재 수정</ModalTitle><ModalSubtitle>{data.code}</ModalSubtitle></div>
+          <div><ModalTitle>{text('Edit material', '자재 수정')}</ModalTitle><ModalSubtitle>{data.code}</ModalSubtitle></div>
           <ModalCloseBtn onClick={onClose}>✕</ModalCloseBtn>
         </ModalHeader>
         <ModalBody>
           {[
-            { key: 'name', label: '품명', type: 'text' },
-            { key: 'spec', label: '규격', type: 'text' },
-            { key: 'unit', label: '단위', type: 'text' },
+            { key: 'name', label: text('Item', '품명'), type: 'text' },
+            { key: 'spec', label: text('Specification', '규격'), type: 'text' },
+            { key: 'unit', label: text('Unit', '단위'), type: 'text' },
           ].map(({ key, label, type }) => (
             <div key={key} style={{ marginBottom: '0.75rem' }}>
               <FieldLabel>{label}</FieldLabel>
@@ -451,7 +462,7 @@ function EditMaterialModal({ data, onSave, onClose }: {
                           onChange={upd(key)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
           ))}
-          <FieldLabel>단가 (원)</FieldLabel>
+          <FieldLabel>{text('Unit price (KRW)', '단가 (원)')}</FieldLabel>
           <PriceInputRow>
             <StepBtn onClick={() => setForm(f => ({ ...f, unitPrice: Math.max(1, f.unitPrice - 100) }))}>−</StepBtn>
             <PriceInput type="number" value={form.unitPrice} min={1}
@@ -468,9 +479,9 @@ function EditMaterialModal({ data, onSave, onClose }: {
           </QuickBtns>
           {diff !== 0 && (
             <DiffBox $positive={diff > 0}>
-              <DiffLabel>단가 변동</DiffLabel>
+              <DiffLabel>{text('Price change', '단가 변동')}</DiffLabel>
               <div>
-                <DiffValue $positive={diff > 0}>{diff > 0 ? '+' : ''}{KRW(diff)}</DiffValue>
+                <DiffValue $positive={diff > 0}>{diff > 0 ? '+' : ''}{currency(diff, 'KRW')}</DiffValue>
                 <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', color: diff > 0 ? '#ef4444' : '#3b82f6' }}>
                   ({diff > 0 ? '+' : ''}{diffPct}%)
                 </span>
@@ -478,15 +489,15 @@ function EditMaterialModal({ data, onSave, onClose }: {
             </DiffBox>
           )}
           <div style={{ marginTop: '0.75rem' }}>
-            <FieldLabel>변경 사유 <span style={{ color: '#ef4444' }}>*</span></FieldLabel>
+            <FieldLabel>{text('Reason for change', '변경 사유')} <span style={{ color: '#ef4444' }}>*</span></FieldLabel>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)}
-                      placeholder="예: 2026년 시세 반영" rows={2} />
-            <HintText>변경 이력에 기록됩니다</HintText>
+                      placeholder={text('Example: Reflect 2026 market prices', '예: 2026년 시세 반영')} rows={2} />
+            <HintText>{text('This will be recorded in the change history.', '변경 이력에 기록됩니다')}</HintText>
           </div>
           <ModalFooter>
-            <CancelBtn onClick={onClose}>취소</CancelBtn>
+            <CancelBtn onClick={onClose}>{text('Cancel', '취소')}</CancelBtn>
             <SaveBtn onClick={handleSave} disabled={isSaving || !reason.trim()}>
-              {isSaving ? '⌛ 저장 중…' : '저장'}
+              {isSaving ? text('⌛ Saving…', '⌛ 저장 중…') : text('Save', '저장')}
             </SaveBtn>
           </ModalFooter>
         </ModalBody>
@@ -500,6 +511,7 @@ function EditVarietyModal({ data, onSave, onClose }: {
   onSave: (id: string, fields: Partial<HopVariety>, reason: string) => void
   onClose: () => void
 }) {
+  const { text, currency } = useLocale()
   const [form, setForm] = useState({ name: data.name, characteristics: data.characteristics ?? '', unitPrice: data.unitPrice, isOwnBrand: data.isOwnBrand })
   const [reason, setReason] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -519,13 +531,13 @@ function EditVarietyModal({ data, onSave, onClose }: {
     <Overlay onClick={(e) => e.target === e.currentTarget && onClose()}>
       <Modal>
         <ModalHeader>
-          <div><ModalTitle>홉 품종 수정</ModalTitle><ModalSubtitle>{data.code}</ModalSubtitle></div>
+          <div><ModalTitle>{text('Edit hop variety', '홉 품종 수정')}</ModalTitle><ModalSubtitle>{data.code}</ModalSubtitle></div>
           <ModalCloseBtn onClick={onClose}>✕</ModalCloseBtn>
         </ModalHeader>
         <ModalBody>
           {[
-            { key: 'name', label: '품종명', type: 'text' },
-            { key: 'characteristics', label: '특성 설명', type: 'text' },
+            { key: 'name', label: text('Variety', '품종명'), type: 'text' },
+            { key: 'characteristics', label: text('Characteristics', '특성 설명'), type: 'text' },
           ].map(({ key, label, type }) => (
             <div key={key} style={{ marginBottom: '0.75rem' }}>
               <FieldLabel>{label}</FieldLabel>
@@ -533,7 +545,7 @@ function EditVarietyModal({ data, onSave, onClose }: {
                           onChange={upd(key)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
           ))}
-          <FieldLabel>단가/주 (원)</FieldLabel>
+          <FieldLabel>{text('Price per plant (KRW)', '단가/주 (원)')}</FieldLabel>
           <PriceInputRow>
             <StepBtn onClick={() => setForm(f => ({ ...f, unitPrice: Math.max(1, f.unitPrice - 100) }))}>−</StepBtn>
             <PriceInput type="number" value={form.unitPrice} min={1} onChange={upd('unitPrice')} />
@@ -549,9 +561,9 @@ function EditVarietyModal({ data, onSave, onClose }: {
           </QuickBtns>
           {diff !== 0 && (
             <DiffBox $positive={diff > 0}>
-              <DiffLabel>단가 변동</DiffLabel>
+              <DiffLabel>{text('Price change', '단가 변동')}</DiffLabel>
               <div>
-                <DiffValue $positive={diff > 0}>{diff > 0 ? '+' : ''}{KRW(diff)}</DiffValue>
+                <DiffValue $positive={diff > 0}>{diff > 0 ? '+' : ''}{currency(diff, 'KRW')}</DiffValue>
                 <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', color: diff > 0 ? '#ef4444' : '#3b82f6' }}>
                   ({diff > 0 ? '+' : ''}{diffPct}%)
                 </span>
@@ -560,18 +572,18 @@ function EditVarietyModal({ data, onSave, onClose }: {
           )}
           <div style={{ margin: '0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" id="isOwnBrand" checked={form.isOwnBrand} onChange={upd('isOwnBrand')} />
-            <label htmlFor="isOwnBrand" style={{ fontSize: '0.875rem', color: '#374151' }}>홉이든 자체 육종</label>
+            <label htmlFor="isOwnBrand" style={{ fontSize: '0.875rem', color: '#374151' }}>{text('HopEden original variety', '홉이든 자체 육종')}</label>
           </div>
           <div>
-            <FieldLabel>변경 사유 <span style={{ color: '#ef4444' }}>*</span></FieldLabel>
+            <FieldLabel>{text('Reason for change', '변경 사유')} <span style={{ color: '#ef4444' }}>*</span></FieldLabel>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)}
-                      placeholder="예: 2026년 시세 반영" rows={2} />
-            <HintText>변경 이력에 기록됩니다</HintText>
+                      placeholder={text('Example: Reflect 2026 market prices', '예: 2026년 시세 반영')} rows={2} />
+            <HintText>{text('This will be recorded in the change history.', '변경 이력에 기록됩니다')}</HintText>
           </div>
           <ModalFooter>
-            <CancelBtn onClick={onClose}>취소</CancelBtn>
+            <CancelBtn onClick={onClose}>{text('Cancel', '취소')}</CancelBtn>
             <SaveBtn onClick={handleSave} disabled={isSaving || !reason.trim()}>
-              {isSaving ? '⌛ 저장 중…' : '저장'}
+              {isSaving ? text('⌛ Saving…', '⌛ 저장 중…') : text('Save', '저장')}
             </SaveBtn>
           </ModalFooter>
         </ModalBody>
@@ -585,8 +597,9 @@ function AddMaterialModal({ categories, onSave, onClose }: {
   onSave: (form: Record<string,unknown>) => void
   onClose: () => void
 }) {
+  const { text } = useLocale()
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? 0)
-  const [form, setForm] = useState({ code: '', name: '', spec: '', unit: '개', unitPrice: 0 })
+  const [form, setForm] = useState({ code: '', name: '', spec: '', unit: text('ea', '개'), unitPrice: 0 })
   const [saving, setSaving] = useState(false)
   const upd = (k: string) => (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: k === 'unitPrice' ? Number(e.target.value) : e.target.value }))
@@ -595,23 +608,29 @@ function AddMaterialModal({ categories, onSave, onClose }: {
     <Overlay onClick={e => e.target === e.currentTarget && onClose()}>
       <Modal>
         <ModalHeader>
-          <div><ModalTitle>자재 등록</ModalTitle><ModalSubtitle>새 자재를 추가합니다</ModalSubtitle></div>
+          <div><ModalTitle>{text('Add material', '자재 등록')}</ModalTitle><ModalSubtitle>{text('Add a new material', '새 자재를 추가합니다')}</ModalSubtitle></div>
           <ModalCloseBtn onClick={onClose}>✕</ModalCloseBtn>
         </ModalHeader>
         <ModalBody>
           <div style={{ marginBottom: '0.75rem' }}>
-            <FieldLabel>카테고리</FieldLabel>
+            <FieldLabel>{text('Category', '카테고리')}</FieldLabel>
             <select value={categoryId} onChange={e => setCategoryId(Number(e.target.value))}
                     style={{ width:'100%', padding:'0.625rem', border:'1px solid #e5e7eb', borderRadius:'0.5rem', fontSize:'0.875rem' }}>
-              {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+              {categories.map(cat => <option key={cat.id} value={cat.id}>{({
+                POLE: text('Poles', '폴(지주)'),
+                WIRE: text('Wire', '와이어'),
+                ANCHOR: text('Anchors', '앵커'),
+                CLIP: text('Connection hardware', '연결부속'),
+                LABOR: text('Installation', '시공비'),
+              } as Record<string,string>)[cat.code] ?? cat.name}</option>)}
             </select>
           </div>
           {([
-            { key: 'code', label: '코드 (예: POLE_STEEL_60_2T_6M)' },
-            { key: 'name', label: '품명' },
-            { key: 'spec', label: '규격 (선택)' },
-            { key: 'unit', label: '단위' },
-            { key: 'unitPrice', label: '단가 (원)', type: 'number' },
+            { key: 'code', label: text('Code (e.g. POLE_STEEL_60_2T_6M)', '코드 (예: POLE_STEEL_60_2T_6M)') },
+            { key: 'name', label: text('Item', '품명') },
+            { key: 'spec', label: text('Specification (optional)', '규격 (선택)') },
+            { key: 'unit', label: text('Unit', '단위') },
+            { key: 'unitPrice', label: text('Unit price (KRW)', '단가 (원)'), type: 'number' },
           ] as { key: string; label: string; type?: string }[]).map(({ key, label, type }) => (
             <div key={key} style={{ marginBottom: '0.75rem' }}>
               <FieldLabel>{label}</FieldLabel>
@@ -620,10 +639,10 @@ function AddMaterialModal({ categories, onSave, onClose }: {
             </div>
           ))}
           <ModalFooter>
-            <CancelBtn onClick={onClose}>취소</CancelBtn>
+            <CancelBtn onClick={onClose}>{text('Cancel', '취소')}</CancelBtn>
             <SaveBtn disabled={saving || !form.code || !form.name || form.unitPrice < 1}
                      onClick={async () => { setSaving(true); await onSave({ ...form, categoryId }); setSaving(false) }}>
-              {saving ? '등록 중…' : '등록하기'}
+              {saving ? text('Adding…', '등록 중…') : text('Add', '등록하기')}
             </SaveBtn>
           </ModalFooter>
         </ModalBody>
@@ -636,6 +655,7 @@ function AddVarietyModal({ onSave, onClose }: {
   onSave: (form: Record<string,unknown>) => void
   onClose: () => void
 }) {
+  const { text } = useLocale()
   const [form, setForm] = useState({ code: '', name: '', characteristics: '', unitPrice: 0, recommendedSpacingM: 1.2, isOwnBrand: false })
   const [saving, setSaving] = useState(false)
   const upd = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -645,16 +665,16 @@ function AddVarietyModal({ onSave, onClose }: {
     <Overlay onClick={e => e.target === e.currentTarget && onClose()}>
       <Modal>
         <ModalHeader>
-          <div><ModalTitle>홉 품종 등록</ModalTitle><ModalSubtitle>새 품종을 추가합니다</ModalSubtitle></div>
+          <div><ModalTitle>{text('Add hop variety', '홉 품종 등록')}</ModalTitle><ModalSubtitle>{text('Add a new variety', '새 품종을 추가합니다')}</ModalSubtitle></div>
           <ModalCloseBtn onClick={onClose}>✕</ModalCloseBtn>
         </ModalHeader>
         <ModalBody>
           {([
-            { key: 'code', label: '코드 (예: HOP_CASCADE)' },
-            { key: 'name', label: '품종명' },
-            { key: 'characteristics', label: '특성 설명' },
-            { key: 'unitPrice', label: '단가/주 (원)', type: 'number' },
-            { key: 'recommendedSpacingM', label: '권장 주간 (m)', type: 'number' },
+            { key: 'code', label: text('Code (e.g. HOP_CASCADE)', '코드 (예: HOP_CASCADE)') },
+            { key: 'name', label: text('Variety', '품종명') },
+            { key: 'characteristics', label: text('Characteristics', '특성 설명') },
+            { key: 'unitPrice', label: text('Price per plant (KRW)', '단가/주 (원)'), type: 'number' },
+            { key: 'recommendedSpacingM', label: text('Recommended plant spacing (m)', '권장 주간 (m)'), type: 'number' },
           ] as { key: string; label: string; type?: string }[]).map(({ key, label, type }) => (
             <div key={key} style={{ marginBottom: '0.75rem' }}>
               <FieldLabel>{label}</FieldLabel>
@@ -664,13 +684,13 @@ function AddVarietyModal({ onSave, onClose }: {
           ))}
           <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <input type="checkbox" id="isOwnBrand2" checked={form.isOwnBrand} onChange={upd('isOwnBrand')} />
-            <label htmlFor="isOwnBrand2" style={{ fontSize: '0.875rem', color: '#374151' }}>홉이든 자체 육종</label>
+            <label htmlFor="isOwnBrand2" style={{ fontSize: '0.875rem', color: '#374151' }}>{text('HopEden original variety', '홉이든 자체 육종')}</label>
           </div>
           <ModalFooter>
-            <CancelBtn onClick={onClose}>취소</CancelBtn>
+            <CancelBtn onClick={onClose}>{text('Cancel', '취소')}</CancelBtn>
             <SaveBtn disabled={saving || !form.code || !form.name || form.unitPrice < 1}
                      onClick={async () => { setSaving(true); await onSave(form); setSaving(false) }}>
-              {saving ? '등록 중…' : '등록하기'}
+              {saving ? text('Adding…', '등록 중…') : text('Add', '등록하기')}
             </SaveBtn>
           </ModalFooter>
         </ModalBody>
@@ -681,6 +701,7 @@ function AddVarietyModal({ onSave, onClose }: {
 
 // ── 메인 ─────────────────────────────────────────────
 export default function AdminPage() {
+  const { text, number } = useLocale()
   const [categories, setCategories] = useState<MaterialCategory[]>([])
   const [varieties, setVarieties] = useState<HopVariety[]>([])
   const [activeTab, setActiveTab] = useState<'materials' | 'varieties'>('materials')
@@ -708,11 +729,11 @@ export default function AdminPage() {
       setCategories(matData.data ?? [])
       setVarieties(varData.data ?? [])
     } catch {
-      showToast('데이터 로드 실패', false)
+      showToast(text('Failed to load data', '데이터 로드 실패'), false)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [text])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -723,9 +744,9 @@ export default function AdminPage() {
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (data.success) { showToast('자재가 등록되었습니다'); setShowAddMaterial(false); fetchData() }
-      else showToast('등록 실패: ' + (data.error ?? '오류'), false)
-    } catch { showToast('네트워크 오류', false) }
+      if (data.success) { showToast(text('Material added.', '자재가 등록되었습니다')); setShowAddMaterial(false); fetchData() }
+      else showToast(`${text('Failed to add:', '등록 실패:')} ${data.error ?? text('Error', '오류')}`, false)
+    } catch { showToast(text('Network error', '네트워크 오류'), false) }
   }
 
   const handleAddVariety = async (form: Record<string,unknown>) => {
@@ -735,9 +756,9 @@ export default function AdminPage() {
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (data.success) { showToast('품종이 등록되었습니다'); setShowAddVariety(false); fetchData() }
-      else showToast('등록 실패: ' + (data.error ?? '오류'), false)
-    } catch { showToast('네트워크 오류', false) }
+      if (data.success) { showToast(text('Variety added.', '품종이 등록되었습니다')); setShowAddVariety(false); fetchData() }
+      else showToast(`${text('Failed to add:', '등록 실패:')} ${data.error ?? text('Error', '오류')}`, false)
+    } catch { showToast(text('Network error', '네트워크 오류'), false) }
   }
 
   const handleMaterialUpdate = async (id: string, fields: Record<string,unknown>, reason: string) => {
@@ -747,9 +768,9 @@ export default function AdminPage() {
         body: JSON.stringify({ ...fields, unitPrice: fields.unitPrice, reason }),
       })
       const data = await res.json()
-      if (data.success) { showToast('자재가 수정되었습니다 ✓'); setEditTarget(null); fetchData() }
-      else showToast('수정 실패: ' + (data.error ?? '오류'), false)
-    } catch { showToast('네트워크 오류', false) }
+      if (data.success) { showToast(text('Material updated ✓', '자재가 수정되었습니다 ✓')); setEditTarget(null); fetchData() }
+      else showToast(`${text('Update failed:', '수정 실패:')} ${data.error ?? text('Error', '오류')}`, false)
+    } catch { showToast(text('Network error', '네트워크 오류'), false) }
   }
 
   const handleVarietyUpdate = async (id: string, fields: Record<string,unknown>, reason: string) => {
@@ -759,9 +780,9 @@ export default function AdminPage() {
         body: JSON.stringify({ ...fields, reason }),
       })
       const data = await res.json()
-      if (data.success) { showToast('품종이 수정되었습니다 ✓'); setEditTarget(null); fetchData() }
-      else showToast('수정 실패: ' + (data.error ?? '오류'), false)
-    } catch { showToast('네트워크 오류', false) }
+      if (data.success) { showToast(text('Variety updated ✓', '품종이 수정되었습니다 ✓')); setEditTarget(null); fetchData() }
+      else showToast(`${text('Update failed:', '수정 실패:')} ${data.error ?? text('Error', '오류')}`, false)
+    } catch { showToast(text('Network error', '네트워크 오류'), false) }
   }
 
   const filteredCategories = categories.map((cat) => ({
@@ -780,21 +801,22 @@ export default function AdminPage() {
             <span style={{ fontWeight: 700 }}>HopEden</span>
           </HeaderLogo>
           <HeaderDivider />
-          <HeaderLabel>관리자 — 자재 단가 관리</HeaderLabel>
+          <HeaderLabel>{text('Admin — Material pricing', '관리자 — 자재 단가 관리')}</HeaderLabel>
         </HeaderLeft>
         <HeaderRight>
-          <HeaderLink href="/design">← 설계 페이지</HeaderLink>
-          <AdminBadge>🔒 관리자 전용</AdminBadge>
+          <LanguageSwitcher />
+          <HeaderLink href="/design">← {text('Design page', '설계 페이지')}</HeaderLink>
+          <AdminBadge>🔒 {text('Admins only', '관리자 전용')}</AdminBadge>
         </HeaderRight>
       </PageHeader>
 
       <Content>
         <StatsGrid>
           {[
-            { label: '총 자재 항목', value: categories.reduce((s, c) => s + c.materials.length, 0), icon: '📦', color: '#2563eb' },
-            { label: '자재 카테고리', value: categories.length, icon: '📂', color: '#9333ea' },
-            { label: '홉 품종', value: varieties.length, icon: '🌱', color: '#16a34a' },
-            { label: '자체 육종', value: varieties.filter((v) => v.isOwnBrand).length, icon: '⭐', color: '#ca8a04' },
+            { label: text('Total materials', '총 자재 항목'), value: number(categories.reduce((s, c) => s + c.materials.length, 0)), icon: '📦', color: '#2563eb' },
+            { label: text('Material categories', '자재 카테고리'), value: number(categories.length), icon: '📂', color: '#9333ea' },
+            { label: text('Hop varieties', '홉 품종'), value: number(varieties.length), icon: '🌱', color: '#16a34a' },
+            { label: text('Original varieties', '자체 육종'), value: number(varieties.filter((v) => v.isOwnBrand).length), icon: '⭐', color: '#ca8a04' },
           ].map((stat) => (
             <StatCard key={stat.label}>
               <StatTop>
@@ -808,16 +830,16 @@ export default function AdminPage() {
 
         <Toolbar>
           <Tabs>
-            <Tab $active={activeTab === 'materials'} onClick={() => setActiveTab('materials')}>📦 자재 단가</Tab>
-            <Tab $active={activeTab === 'varieties'} onClick={() => setActiveTab('varieties')}>🌱 홉 품종 단가</Tab>
+            <Tab $active={activeTab === 'materials'} onClick={() => setActiveTab('materials')}>📦 {text('Material prices', '자재 단가')}</Tab>
+            <Tab $active={activeTab === 'varieties'} onClick={() => setActiveTab('varieties')}>🌱 {text('Hop variety prices', '홉 품종 단가')}</Tab>
           </Tabs>
-          <AddBtn onClick={() => activeTab === 'materials' ? setShowAddMaterial(true) : setShowAddVariety(true)}>+ {activeTab === 'materials' ? '자재 등록' : '품종 등록'}</AddBtn>
+          <AddBtn onClick={() => activeTab === 'materials' ? setShowAddMaterial(true) : setShowAddVariety(true)}>+ {activeTab === 'materials' ? text('Add material', '자재 등록') : text('Add variety', '품종 등록')}</AddBtn>
           <SearchWrapper>
             <SearchIcon>🔍</SearchIcon>
             <SearchInput
               type="text" value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="품명 또는 코드 검색…"
+              placeholder={text('Search by name or code…', '품명 또는 코드 검색…')}
             />
           </SearchWrapper>
         </Toolbar>

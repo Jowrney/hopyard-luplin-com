@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styled from 'styled-components'
 import { createClient } from '@/lib/supabase/client'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 // ── 스타일 ──────────────────────────────────────────
 const PageWrapper = styled.div`
@@ -19,6 +21,12 @@ const PageWrapper = styled.div`
 const Container = styled.div`
     width: 100%;
     max-width: 448px;
+`
+
+const SwitcherRow = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
 `
 
 const LogoArea = styled.div`
@@ -267,42 +275,57 @@ const Copyright = styled.p`
 `
 
 // ── 비밀번호 강도 계산 ────────────────────────────────
-function getStrength(pw: string) {
+type TextFn = (en: string, ko: string) => string
+type RegisterError = 'name' | 'email' | 'password-length' | 'password-match' | 'registered' | 'provider-password' | 'signup' | 'google'
+
+function getStrength(pw: string, text: TextFn) {
   if (!pw) return null
-  if (pw.length < 8) return { label: '약함', color: '#F87171', width: '25%' }
-  if (pw.length < 12 && !/[!@#$%^&*]/.test(pw)) return { label: '보통', color: '#FBBF24', width: '50%' }
-  if (/[!@#$%^&*]/.test(pw) && /[0-9]/.test(pw)) return { label: '강함', color: '#22C55E', width: '100%' }
-  return { label: '양호', color: '#60A5FA', width: '75%' }
+  if (pw.length < 8) return { label: text('Weak', '약함'), color: '#F87171', width: '25%' }
+  if (pw.length < 12 && !/[!@#$%^&*]/.test(pw)) return { label: text('Fair', '보통'), color: '#FBBF24', width: '50%' }
+  if (/[!@#$%^&*]/.test(pw) && /[0-9]/.test(pw)) return { label: text('Strong', '강함'), color: '#22C55E', width: '100%' }
+  return { label: text('Good', '양호'), color: '#60A5FA', width: '75%' }
 }
 
 // ── 컴포넌트 ─────────────────────────────────────────
 export default function RegisterPage() {
+  const { text } = useLocale()
   const router = useRouter()
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [error, setError] = useState<{ type: RegisterError; detail?: string } | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const supabase = createClient()
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 
-  const validate = () => {
-    if (form.name.length < 2) return '이름은 2자 이상이어야 합니다'
-    if (!form.email.includes('@')) return '올바른 이메일 형식이 아닙니다'
-    if (form.password.length < 8) return '비밀번호는 8자 이상이어야 합니다'
-    if (form.password !== form.confirm) return '비밀번호가 일치하지 않습니다'
+  const validate = (): RegisterError | null => {
+    if (form.name.length < 2) return 'name'
+    if (!form.email.includes('@')) return 'email'
+    if (form.password.length < 8) return 'password-length'
+    if (form.password !== form.confirm) return 'password-match'
     return null
   }
+
+  const errorMessage = (value: { type: RegisterError; detail?: string }) => ({
+    name: text('Your name must be at least 2 characters.', '이름은 2자 이상이어야 합니다'),
+    email: text('Enter a valid email address.', '올바른 이메일 형식이 아닙니다'),
+    'password-length': text('Your password must be at least 8 characters.', '비밀번호는 8자 이상이어야 합니다'),
+    'password-match': text('The passwords do not match.', '비밀번호가 일치하지 않습니다'),
+    registered: text('This email is already in use.', '이미 사용 중인 이메일입니다'),
+    'provider-password': text('The password does not meet the provider requirements.', '비밀번호가 인증 서비스 요구 사항을 충족하지 않습니다'),
+    signup: `${text('Sign-up error:', '회원가입 오류:')} ${value.detail ?? ''}`,
+    google: `${text('Google sign-in error:', '구글 로그인 중 오류가 발생했습니다:')} ${value.detail ?? ''}`,
+  })[value.type]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const validErr = validate()
-    if (validErr) { setError(validErr); return }
+    if (validErr) { setError({ type: validErr }); return }
 
     setIsLoading(true)
-    setError('')
+    setError(null)
 
     const { error: authError } = await supabase.auth.signUp({
       email: form.email,
@@ -317,10 +340,10 @@ export default function RegisterPage() {
     if (authError) {
       setError(
         authError.message === 'User already registered'
-          ? '이미 사용 중인 이메일입니다'
+          ? { type: 'registered' }
           : authError.message.includes('Password')
-            ? '비밀번호는 6자 이상이어야 합니다'
-            : `회원가입 오류: ${authError.message}`
+            ? { type: 'provider-password' }
+            : { type: 'signup', detail: authError.message }
       )
     } else {
       // 이메일 인증 여부에 따라 분기
@@ -331,7 +354,7 @@ export default function RegisterPage() {
         setTimeout(() => router.push('/design'), 100)
       } else {
         // 이메일 인증 필요
-        setSuccess('가입이 완료되었습니다! 이메일함을 확인하여 인증을 완료해주세요.')
+        setSuccess(true)
         setTimeout(() => router.push('/login'), 3000)
       }
     }
@@ -339,7 +362,7 @@ export default function RegisterPage() {
 
   const handleGoogle = async () => {
     setIsLoading(true)
-    setError('')
+    setError(null)
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -348,34 +371,35 @@ export default function RegisterPage() {
       },
     })
     if (oauthError) {
-      setError('구글 로그인 중 오류가 발생했습니다: ' + oauthError.message)
+      setError({ type: 'google', detail: oauthError.message })
       setIsLoading(false)
     }
   }
 
-  const strength = getStrength(form.password)
+  const strength = getStrength(form.password, text)
   const pwMismatch = !!form.confirm && form.password !== form.confirm
 
   return (
     <PageWrapper>
       <Container>
+        <SwitcherRow><LanguageSwitcher /></SwitcherRow>
         <LogoArea>
           <Link href="/">
             <LogoEmoji>🌿</LogoEmoji>
           </Link>
           <Title>HopEden Designer</Title>
-          <Subtitle>홉 농장 설계를 무료로 시작하세요</Subtitle>
+          <Subtitle>{text('Start designing your hop farm for free', '홉 농장 설계를 무료로 시작하세요')}</Subtitle>
         </LogoArea>
 
         <Card>
           <CardHeader>
-            <CardTitle>회원가입</CardTitle>
-            <CardDesc>무료 계정을 만들고 설계를 저장하세요</CardDesc>
+            <CardTitle>{text('Create an account', '회원가입')}</CardTitle>
+            <CardDesc>{text('Create a free account and save your designs', '무료 계정을 만들고 설계를 저장하세요')}</CardDesc>
           </CardHeader>
 
           <CardBody>
-            {error && <ErrorBox>⚠️ {error}</ErrorBox>}
-            {success && <SuccessBox>✅ {success}</SuccessBox>}
+            {error && <ErrorBox>⚠️ {errorMessage(error)}</ErrorBox>}
+            {success && <SuccessBox>✅ {text('Your account is ready! Check your inbox to verify your email.', '가입이 완료되었습니다! 이메일함을 확인하여 인증을 완료해주세요.')}</SuccessBox>}
 
             <GoogleButton onClick={handleGoogle} type="button">
               <svg width="20" height="20" viewBox="0 0 24 24">
@@ -384,37 +408,37 @@ export default function RegisterPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Google 계정으로 가입
+              {text('Sign up with Google', 'Google 계정으로 가입')}
             </GoogleButton>
 
-            <Divider><span>또는 이메일로 가입</span></Divider>
+            <Divider><span>{text('or sign up with email', '또는 이메일로 가입')}</span></Divider>
 
             <Form onSubmit={handleSubmit}>
               <Field>
-                <Label>이름</Label>
-                <Input type="text" value={form.name} onChange={update('name')} placeholder="홍길동" required />
+                <Label>{text('Name', '이름')}</Label>
+                <Input type="text" value={form.name} onChange={update('name')} placeholder={text('Your name', '홍길동')} required />
               </Field>
 
               <Field>
-                <Label>이메일</Label>
+                <Label>{text('Email', '이메일')}</Label>
                 <Input type="email" value={form.email} onChange={update('email')} placeholder="example@email.com" required />
               </Field>
 
               <Field>
-                <Label>비밀번호</Label>
-                <Input type="password" value={form.password} onChange={update('password')} placeholder="8자 이상" required />
+                <Label>{text('Password', '비밀번호')}</Label>
+                <Input type="password" value={form.password} onChange={update('password')} placeholder={text('At least 8 characters', '8자 이상')} required />
                 {strength && (
                   <StrengthBar>
                     <StrengthTrack>
                       <StrengthFill $width={strength.width} $color={strength.color} />
                     </StrengthTrack>
-                    <StrengthLabel $color={strength.color}>비밀번호 강도: {strength.label}</StrengthLabel>
+                    <StrengthLabel $color={strength.color}>{text('Password strength:', '비밀번호 강도:')} {strength.label}</StrengthLabel>
                   </StrengthBar>
                 )}
               </Field>
 
               <Field>
-                <Label>비밀번호 확인</Label>
+                <Label>{text('Confirm password', '비밀번호 확인')}</Label>
                 <Input
                   type="password"
                   value={form.confirm}
@@ -423,12 +447,17 @@ export default function RegisterPage() {
                   $error={pwMismatch}
                   required
                 />
-                {pwMismatch && <FieldError>비밀번호가 일치하지 않습니다</FieldError>}
+                {pwMismatch && <FieldError>{text('The passwords do not match.', '비밀번호가 일치하지 않습니다')}</FieldError>}
               </Field>
 
               <BenefitBox>
-                <BenefitTitle>✓ 무료 가입 혜택</BenefitTitle>
-                {['설계안 무제한 저장', '3D/2D 뷰어 사용', '견적서 PDF 출력', '자재 가격 실시간 반영'].map((b) => (
+                <BenefitTitle>✓ {text('Free account benefits', '무료 가입 혜택')}</BenefitTitle>
+                {[
+                  text('Save unlimited designs', '설계안 무제한 저장'),
+                  text('Use the 3D/2D viewer', '3D/2D 뷰어 사용'),
+                  text('Export estimate PDFs', '견적서 PDF 출력'),
+                  text('Get real-time material prices', '자재 가격 실시간 반영'),
+                ].map((b) => (
                   <BenefitItem key={b}>
                     <span>✓</span>
                     <span>{b}</span>
@@ -438,18 +467,18 @@ export default function RegisterPage() {
 
               <SubmitButton type="submit" disabled={isLoading || pwMismatch} $loading={isLoading}>
                 {isLoading ? '⌛' : '🌿'}
-                {isLoading ? '가입 중…' : '무료 회원가입'}
+                {isLoading ? text('Creating account…', '가입 중…') : text('Create free account', '무료 회원가입')}
               </SubmitButton>
             </Form>
 
             <FooterText>
-              이미 계정이 있으신가요?{' '}
-              <Link href="/login">로그인</Link>
+              {text('Already have an account?', '이미 계정이 있으신가요?')}{' '}
+              <Link href="/login">{text('Sign in', '로그인')}</Link>
             </FooterText>
           </CardBody>
         </Card>
 
-        <Copyright>© 2026 농업회사법인 홉이든 · hopeden.kr</Copyright>
+        <Copyright>© 2026 {text('HopEden Agricultural Corporation', '농업회사법인 홉이든')} · hopeden.kr</Copyright>
       </Container>
     </PageWrapper>
   )

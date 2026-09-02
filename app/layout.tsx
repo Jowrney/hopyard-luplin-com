@@ -4,17 +4,17 @@ import { Providers } from './providers'
 import StyledComponentsRegistry from './registry'
 
 export const metadata: Metadata = {
-  title: 'HopEden Designer — 홉 시설설계 & 비용산출 플랫폼',
-  description: '홉 재배 시설 설계, 자재 견적, 2D/3D 시각화를 한 번에. 농업회사법인 홉이든.',
+  title: 'HopEden Designer — Hopyard planning and cost estimation',
+  description: 'Plan hop trellis systems, compare materials and estimates, and review the farm in 2D and 3D.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="en">
     <body>
     <StyledComponentsRegistry>
       <Providers>
-        {children} 1
+        {children}
       </Providers>
     </StyledComponentsRegistry>
     </body>

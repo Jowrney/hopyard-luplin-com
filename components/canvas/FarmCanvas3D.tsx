@@ -7,6 +7,7 @@ import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
 import { getPoleAssetLabel, getPoleAssetName } from '@/lib/design/pole-assets'
 import { getTrainingWireOffsets } from '@/lib/design/training-geometry'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 const CanvasWrapper = styled.div`width:100%;height:100%;position:relative;`
 
@@ -39,6 +40,19 @@ const AssetStatus = styled.span<{$loaded:boolean}>`
   background:${({$loaded})=>$loaded?'#dcfce7':'#fef3c7'};
 `
 
+function getKoreanPoleAssetLabel(poleCode:string,profileId:string):string {
+  const labels:Record<string,string> = {
+    POLE_STEEL_60_2T_6M: '아연도금 강관 60 mm · 6 m',
+    POLE_STEEL_60_2T_9M: '아연도금 강관 60 mm · 9 m',
+    POLE_WOOD_H4_100_6M: 'H4 방부목 100 mm · 6 m',
+    POLE_WOOD_H4_120_6M: 'H4 방부목 120 mm · 6 m',
+    POLE_PC_9M: '프리캐스트 콘크리트 · 9 m',
+    POLE_PC_12M: '프리캐스트 콘크리트 · 12 m',
+    POLE_US_WOOD_22FT: '신재 목재 폴 · 22 ft',
+  }
+  return labels[poleCode] ?? (profileId === 'US_HIGH_TRELLIS' ? '신재 목재 폴 · 22 ft' : '아연도금 강관 60 mm · 6 m')
+}
+
 export function FarmCanvas3D() {
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef  = useRef<unknown>(null)
@@ -47,8 +61,9 @@ export function FarmCanvas3D() {
   const animIdRef    = useRef(0)
   const readyRef     = useRef(false)
   const assetKitRef  = useRef<Map<string, THREETypes.Object3D> | null>(null)
-  const [assetStatus,setAssetStatus] = useState('Loading Blender GLB…')
+  const [assetStatus,setAssetStatus] = useState<{kind:'loading'|'loaded'|'fallback';count?:number}>({kind:'loading'})
   const {inputs, quantities, profileId, selectedPoleCode} = useDesignStore()
+  const {text,number}=useLocale()
 
   useEffect(()=>{
     const container = containerRef.current; if(!container) return
@@ -148,7 +163,7 @@ export function FarmCanvas3D() {
       ]
       const loadedMasterCount=masterNames.filter(name=>assetKitRef.current?.has(name)).length
       const blenderAssetsLoaded=loadedMasterCount===masterNames.length
-      setAssetStatus(blenderAssetsLoaded?`Blender GLB · ${loadedMasterCount} assets`:'Procedural fallback')
+      setAssetStatus(blenderAssetsLoaded?{kind:'loaded',count:loadedMasterCount}:{kind:'fallback'})
       const activeRenderer=rendererRef.current as THREETypes.WebGLRenderer | null
       if(activeRenderer) activeRenderer.domElement.dataset.assetKit=blenderAssetsLoaded?`blender-glb:${loadedMasterCount}`:'procedural-fallback'
       const scene = new THREE.Scene()
@@ -509,15 +524,25 @@ export function FarmCanvas3D() {
     build()
   },[inputs,quantities,profileId,selectedPoleCode])
 
+  const assetStatusLabel = assetStatus.kind === 'loading'
+    ? text('Loading Blender GLB…', 'Blender GLB 불러오는 중…')
+    : assetStatus.kind === 'loaded'
+      ? text(`Blender GLB · ${number(assetStatus.count ?? 0)} assets`, `Blender GLB · 에셋 ${number(assetStatus.count ?? 0)}개`)
+      : text('Procedural fallback', '절차적 모델로 대체')
+  const poleAssetLabel = text(
+    getPoleAssetLabel(selectedPoleCode,profileId),
+    getKoreanPoleAssetLabel(selectedPoleCode,profileId),
+  )
+
   return (
     <CanvasWrapper ref={containerRef}>
-      <BottomHint>🖱️ 드래그 — 회전 &nbsp;|&nbsp; 방향키 — 이동 &nbsp;|&nbsp; 휠 — 줌</BottomHint>
+      <BottomHint>🖱️ {text('Drag — rotate | Arrow keys — move | Wheel — zoom', '드래그 — 회전 | 방향키 — 이동 | 휠 — 줌')}</BottomHint>
       <TopLabel>
         <span>
-          🌿 {profileId === 'US_HIGH_TRELLIS' ? 'North America reference' : 'Korea'} ·{' '}
-          {getPoleAssetLabel(selectedPoleCode,profileId)} · {inputs.trainingType}-training
+          🌿 {profileId === 'US_HIGH_TRELLIS' ? text('North America reference', '북미 기준') : text('Korea', '대한민국')} ·{' '}
+          {poleAssetLabel} · {text(`${inputs.trainingType}-training`, `${inputs.trainingType}자형 유인`)}
         </span>
-        <AssetStatus $loaded={assetStatus.startsWith('Blender')}>{assetStatus}</AssetStatus>
+        <AssetStatus $loaded={assetStatus.kind === 'loaded'}>{assetStatusLabel}</AssetStatus>
       </TopLabel>
     </CanvasWrapper>
   )

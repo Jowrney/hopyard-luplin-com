@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 import { usePriceStore } from '@/stores/priceStore'
+import { LocaleProvider } from '@/components/i18n/LocaleProvider'
 
 function PriceInitializer() {
   const fetchPrices = usePriceStore((s) => s.fetchPrices)
@@ -18,9 +19,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }))
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <PriceInitializer />
-      {children}
-    </QueryClientProvider>
+    <LocaleProvider>
+      <QueryClientProvider client={queryClient}>
+        <PriceInitializer />
+        {children}
+      </QueryClientProvider>
+    </LocaleProvider>
   )
 }

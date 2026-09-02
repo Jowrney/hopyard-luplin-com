@@ -8,14 +8,22 @@ import type { WindRegion, TrainingType } from '@/types'
 import type { LaborCosts } from '@/stores/designStore'
 import { useState, useRef, useEffect } from 'react'
 import { getRegionalProfile } from '@/lib/design/regional-profiles'
+import { useLocale } from '@/components/i18n/LocaleProvider'
+import {
+  getEstimateItemLabel,
+  getRegionLabel,
+  getUnitLabel,
+  getVarietyDescription,
+  getVarietyName,
+} from '@/lib/i18n'
 
 // ── 지역/와이어 단수 옵션 ──────────────────────────────
-const REGION_OPTIONS: { value: WindRegion; label: string; wind: string }[] = [
-  { value: 'INLAND',  label: '내륙 일반',     wind: '24 m/s' },
-  { value: 'SEOUL',   label: '서울/경기',      wind: '26 m/s' },
-  { value: 'GANGWON', label: '강원 산간',      wind: '30 m/s' },
-  { value: 'COASTAL', label: '부산/경남 해안', wind: '35 m/s' },
-  { value: 'JEJU',    label: '제주',           wind: '40 m/s' },
+const REGION_OPTIONS: { value: WindRegion; wind: string }[] = [
+  { value: 'INLAND',  wind: '24 m/s' },
+  { value: 'SEOUL',   wind: '26 m/s' },
+  { value: 'GANGWON', wind: '30 m/s' },
+  { value: 'COASTAL', wind: '35 m/s' },
+  { value: 'JEJU',    wind: '40 m/s' },
 ]
 
 const WIRE_ROWS_OPTIONS = [
@@ -539,17 +547,18 @@ function NumberInput({ label, value, min, max, step, onChange, mt }: {
 function MatCard({ material, selected, onSelect, meta }: {
   material: Material; selected: boolean; onSelect: () => void; meta?: string
 }) {
+  const { locale, currency } = useLocale()
   return (
     <MaterialCardBtn $selected={selected} onClick={onSelect}>
       <MaterialInfo>
-        <MaterialName>{material.name}</MaterialName>
+        <MaterialName>{getEstimateItemLabel(material.code, material.name, locale)}</MaterialName>
         {(meta || material.spec) && (
           <MaterialMeta>{meta ?? material.spec}</MaterialMeta>
         )}
       </MaterialInfo>
       <MaterialPrice>
-        <MaterialPriceMain>₩{material.unitPrice.toLocaleString('ko-KR')}</MaterialPriceMain>
-        <MaterialPriceUnit>/{material.unit}</MaterialPriceUnit>
+        <MaterialPriceMain>{currency(material.unitPrice, 'KRW')}</MaterialPriceMain>
+        <MaterialPriceUnit>/{getUnitLabel(material.unit, locale)}</MaterialPriceUnit>
       </MaterialPrice>
     </MaterialCardBtn>
   )
@@ -581,6 +590,7 @@ function SkeletonList() {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────
 export function DesignInputForm() {
+  const { locale, text, number, currency } = useLocale()
   const {
     profileId, inputs, selectedPoleCode, selectedWireCode, selectedAnchorCode,
     selectedVarietyCode, includeLabor, includeVat, laborCosts, setLaborCosts,
@@ -668,9 +678,6 @@ export function DesignInputForm() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getPrice = usePriceStore((s) => s.getPrice)
-
   const { data: materialsData } = useQuery({
     queryKey: ['materials'],
     queryFn: async () => (await fetch('/api/admin/materials')).json(),
@@ -708,39 +715,51 @@ export function DesignInputForm() {
   const anchors = categories.find((c) => c.code === 'ANCHOR')?.materials ?? []
   const areaM2  = inputs.widthM * inputs.heightM
   const activeProfile = getRegionalProfile(profileId)
-  const profileMaterialName = (code: string) => activeProfile.materials.find((material) => material.code === code)?.name
+  const materialName = (code: string, fallback: string) => getEstimateItemLabel(code, fallback, locale)
+  const profileMaterialName = (code: string) => {
+    const material = activeProfile.materials.find(candidate => candidate.code === code)
+    return material ? materialName(material.code, material.name) : undefined
+  }
+  const varietyName = (variety: Variety) => getVarietyName(
+    variety.code,
+    locale === 'ko' ? variety.nameKo ?? variety.name : variety.name,
+    locale,
+  )
+  const price = (value: number) => currency(value, activeProfile.currency)
 
   return (
     <FormWrapper>
       <FormHeader>
-        <FormTitle>농장 설계 정보</FormTitle>
-        <FormDesc>입력값이 바뀌면 견적이 즉시 업데이트됩니다</FormDesc>
+        <FormTitle>{text('Hopyard design', '농장 설계 정보')}</FormTitle>
+        <FormDesc>{text('The estimate updates as you change the inputs.', '입력값이 바뀌면 견적이 즉시 업데이트됩니다')}</FormDesc>
       </FormHeader>
 
       {/* 1. 농장 면적 */}
-      <Section title="농장 면적" icon="📐">
+      <Section title={text('Hopyard area', '농장 면적')} icon="📐">
         <Grid2>
-          <NumberInput label="가로 (m)" value={inputs.widthM} min={5} max={500} step={1}
+          <NumberInput label={text('Width (m)', '가로 (m)')} value={inputs.widthM} min={5} max={500} step={1}
                        onChange={(v) => updateInputs({ widthM: v })} />
-          <NumberInput label="세로 (m)" value={inputs.heightM} min={5} max={500} step={1}
+          <NumberInput label={text('Length (m)', '세로 (m)')} value={inputs.heightM} min={5} max={500} step={1}
                        onChange={(v) => updateInputs({ heightM: v })} />
         </Grid2>
         <InfoBox>
-          재배 면적 <strong>{areaM2.toLocaleString('ko-KR')} ㎡</strong>
-          {' '}({(areaM2 / 3.3058).toFixed(0)}평)
+          {text('Growing area', '재배 면적')} <strong>{number(areaM2)} ㎡</strong>
+          {' '}({number(Math.round(areaM2 / 3.3058))} {text('pyeong', '평')})
         </InfoBox>
       </Section>
 
       {/* 2. 폴 선택 */}
-      <Section title="폴(지주) 선택" icon="🏗️">
+      <Section title={text('Select poles', '폴(지주) 선택')} icon="🏗️">
         <DropdownWrap ref={poleRef}>
           <DropdownBtn onClick={() => setPoleOpen(v=>!v)}>
-            <span>{poles.find(p=>p.code===selectedPoleCode)?.name ?? profileMaterialName(selectedPoleCode) ?? '폴 선택'}</span>
+            <span>{poles.find(p=>p.code===selectedPoleCode)
+              ? materialName(selectedPoleCode, poles.find(p=>p.code===selectedPoleCode)!.name)
+              : profileMaterialName(selectedPoleCode) ?? text('Select a pole', '폴 선택')}</span>
             <DropdownArrow $open={poleOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {poleOpen && (
             <DropdownMenu>
-              {poles.length === 0 ? <DropdownItem $selected={false} disabled>로딩 중…</DropdownItem>
+              {poles.length === 0 ? <DropdownItem $selected={false} disabled>{text('Loading…', '로딩 중…')}</DropdownItem>
                 : poles.map(pole => (
                   <DropdownItem key={pole.code} $selected={selectedPoleCode===pole.code}
                                 onClick={() => {
@@ -748,8 +767,8 @@ export function DesignInputForm() {
                                   setSelectedPole(pole.code, meta?.effective_height_m)
                                   setPoleOpen(false)
                                 }}>
-                    <DropdownItemName>{pole.name}</DropdownItemName>
-                    <DropdownItemSub>₩{pole.unitPrice.toLocaleString()}</DropdownItemSub>
+                    <DropdownItemName>{materialName(pole.code, pole.name)}</DropdownItemName>
+                    <DropdownItemSub>{price(pole.unitPrice)}</DropdownItemSub>
                     {selectedPoleCode===pole.code && <DropdownCheck>✓</DropdownCheck>}
                   </DropdownItem>
                 ))}
@@ -757,30 +776,32 @@ export function DesignInputForm() {
           )}
         </DropdownWrap>
         <Grid2 style={{ marginTop: '0.75rem' }}>
-          <NumberInput label="행간 (m)" value={inputs.rowSpacingM} min={1} max={15} step={0.1}
+          <NumberInput label={text('Row spacing (m)', '행간 (m)')} value={inputs.rowSpacingM} min={1} max={15} step={0.1}
                        onChange={(v) => updateInputs({ rowSpacingM: v })} />
-          <NumberInput label="폴 간격 (m)" value={inputs.poleSpacingM} min={1} max={20} step={0.1}
+          <NumberInput label={text('Pole spacing (m)', '폴 간격 (m)')} value={inputs.poleSpacingM} min={1} max={20} step={0.1}
                        onChange={(v) => updateInputs({ poleSpacingM: v })} />
         </Grid2>
       </Section>
 
       {/* 3. 와이어 선택 */}
-      <Section title="와이어 선택" icon="🔗">
+      <Section title={text('Select wire', '와이어 선택')} icon="🔗">
         <DropdownWrap ref={wireRef}>
           <DropdownBtn onClick={() => setWireOpen(v=>!v)}>
-            <span>{wires.find(w=>w.code===selectedWireCode)?.name ?? profileMaterialName(selectedWireCode) ?? '와이어 선택'}</span>
+            <span>{wires.find(w=>w.code===selectedWireCode)
+              ? materialName(selectedWireCode, wires.find(w=>w.code===selectedWireCode)!.name)
+              : profileMaterialName(selectedWireCode) ?? text('Select wire', '와이어 선택')}</span>
             <DropdownArrow $open={wireOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {wireOpen && (
             <DropdownMenu>
-              {wires.length === 0 ? <DropdownItem $selected={false} disabled>로딩 중…</DropdownItem>
+              {wires.length === 0 ? <DropdownItem $selected={false} disabled>{text('Loading…', '로딩 중…')}</DropdownItem>
                 : wires.map(wire => {
                   const tensile = (wire.metadata as {tensile_strength_kn?:number}|null)?.tensile_strength_kn
                   return (
                     <DropdownItem key={wire.code} $selected={selectedWireCode===wire.code}
                                   onClick={() => { setSelectedWire(wire.code); setWireOpen(false) }}>
-                      <DropdownItemName>{wire.name}</DropdownItemName>
-                      <DropdownItemSub>{tensile ? `${tensile}kN ` : ''}₩{wire.unitPrice.toLocaleString()}/m</DropdownItemSub>
+                      <DropdownItemName>{materialName(wire.code, wire.name)}</DropdownItemName>
+                      <DropdownItemSub>{tensile ? `${number(tensile)} kN · ` : ''}{price(wire.unitPrice)}/m</DropdownItemSub>
                       {selectedWireCode===wire.code && <DropdownCheck>✓</DropdownCheck>}
                     </DropdownItem>
                   )
@@ -791,20 +812,22 @@ export function DesignInputForm() {
       </Section>
 
       {/* 4. 앵커 선택 */}
-      <Section title="앵커(지박) 선택" icon="⚓">
-        <DropdownWrap>
+      <Section title={text('Select anchors', '앵커(지박) 선택')} icon="⚓">
+        <DropdownWrap ref={anchorRef}>
           <DropdownBtn onClick={() => setAnchorOpen(v=>!v)}>
-            <span>{anchors.find(a=>a.code===selectedAnchorCode)?.name ?? profileMaterialName(selectedAnchorCode) ?? '앵커 선택'}</span>
+            <span>{anchors.find(a=>a.code===selectedAnchorCode)
+              ? materialName(selectedAnchorCode, anchors.find(a=>a.code===selectedAnchorCode)!.name)
+              : profileMaterialName(selectedAnchorCode) ?? text('Select an anchor', '앵커 선택')}</span>
             <DropdownArrow $open={anchorOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {anchorOpen && (
             <DropdownMenu>
-              {anchors.length === 0 ? <DropdownItem $selected={false} disabled>로딩 중…</DropdownItem>
+              {anchors.length === 0 ? <DropdownItem $selected={false} disabled>{text('Loading…', '로딩 중…')}</DropdownItem>
                 : anchors.map(anchor => (
                   <DropdownItem key={anchor.code} $selected={selectedAnchorCode===anchor.code}
                                 onClick={() => { setSelectedAnchor(anchor.code); setAnchorOpen(false) }}>
-                    <DropdownItemName>{anchor.name}</DropdownItemName>
-                    <DropdownItemSub>₩{anchor.unitPrice.toLocaleString()}/개</DropdownItemSub>
+                    <DropdownItemName>{materialName(anchor.code, anchor.name)}</DropdownItemName>
+                    <DropdownItemSub>{price(anchor.unitPrice)}/{getUnitLabel('개', locale)}</DropdownItemSub>
                     {selectedAnchorCode===anchor.code && <DropdownCheck>✓</DropdownCheck>}
                   </DropdownItem>
                 ))}
@@ -814,26 +837,33 @@ export function DesignInputForm() {
       </Section>
 
       {/* 5. 홉 품종 */}
-      <Section title="홉 품종(종근)" icon="🌱">
+      <Section title={text('Hop varieties (rhizomes)', '홉 품종(종근)')} icon="🌱">
         <DropdownWrap ref={varietyRef}>
           <DropdownBtn onClick={() => setVarietyOpen(v=>!v)}>
             <span>
               {selectedVarieties.length === 0
-                ? '품종 선택 (복수 가능)'
-                : `${selectedVarieties.length}개 선택됨`}
+                ? text('Select varieties (multiple allowed)', '품종 선택 (복수 가능)')
+                : text(`${number(selectedVarieties.length)} selected`, `${number(selectedVarieties.length)}개 선택됨`)}
             </span>
             <DropdownArrow $open={varietyOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {varietyOpen && (
             <DropdownMenu>
-              {varieties.length === 0 ? <DropdownItem $selected={false} disabled>로딩 중…</DropdownItem>
+              {varieties.length === 0 ? <DropdownItem $selected={false} disabled>{text('Loading…', '로딩 중…')}</DropdownItem>
                 : varieties.map(v => (
                   <DropdownItem key={v.code} $selected={selectedVarieties.includes(v.code)}
                                 onClick={() => toggleVariety(v.code, v.unitPrice)}>
-                    <DropdownItemName>
-                      {v.name}{v.isOwnBrand ? ' 🌿' : ''}
-                    </DropdownItemName>
-                    <DropdownItemSub>₩{v.unitPrice.toLocaleString()}/주</DropdownItemSub>
+                    <div style={{flex:1,minWidth:0}}>
+                      <DropdownItemName>
+                        {varietyName(v)}{v.isOwnBrand ? ' 🌿' : ''}
+                      </DropdownItemName>
+                      {(getVarietyDescription(v.code, locale) || v.characteristics) && (
+                        <div style={{fontSize:'0.7rem',color:'#6b7280',marginTop:'0.1rem'}}>
+                          {getVarietyDescription(v.code, locale) || (locale === 'ko' ? v.characteristics : v.code)}
+                        </div>
+                      )}
+                    </div>
+                    <DropdownItemSub>{price(v.unitPrice)}/{getUnitLabel('주', locale)}</DropdownItemSub>
                     {selectedVarieties.includes(v.code) && <DropdownCheck>✓</DropdownCheck>}
                   </DropdownItem>
                 ))}
@@ -849,8 +879,8 @@ export function DesignInputForm() {
               return (
                 <VarietyQtyRow key={code}>
                   <VarietyQtyName>
-                    {v.name}{v.isOwnBrand ? ' 🌿' : ''}
-                    <VarietyQtyPrice>₩{v.unitPrice.toLocaleString()}/주</VarietyQtyPrice>
+                    {varietyName(v)}{v.isOwnBrand ? ' 🌿' : ''}
+                    <VarietyQtyPrice>{price(v.unitPrice)}/{getUnitLabel('주', locale)}</VarietyQtyPrice>
                   </VarietyQtyName>
                   <VarietyQtyCtrl>
                     <QtyBtn onClick={() => setQty(code, qty - 10)}>−</QtyBtn>
@@ -859,50 +889,58 @@ export function DesignInputForm() {
                       placeholder="0"
                       onChange={e => setQty(code, Number(e.target.value) || 0)}
                     />
-                    <QtyUnit>주</QtyUnit>
+                    <QtyUnit>{getUnitLabel('주', locale)}</QtyUnit>
                     <QtyBtn onClick={() => setQty(code, qty + 10)}>+</QtyBtn>
                     <MultiTagX onClick={() => toggleVariety(code, v.unitPrice)} style={{marginLeft:'0.25rem'}}>×</MultiTagX>
                   </VarietyQtyCtrl>
                   <VarietyQtyTotal>
-                    소계 ₩{(v.unitPrice * qty).toLocaleString()}
+                    {text('Subtotal', '소계')} {price(v.unitPrice * qty)}
                   </VarietyQtyTotal>
                 </VarietyQtyRow>
               )
             })}
             <VarietyQtySummary>
-              <span>총 {totalVarietyQty.toLocaleString()}주</span>
-              <span>₩{selectedVarieties.reduce((s,code)=>{
+              <span>{text(`Total ${number(totalVarietyQty)} plants`, `총 ${number(totalVarietyQty)}주`)}</span>
+              <span>{price(selectedVarieties.reduce((s,code)=>{
                 const v=varieties.find(vv=>vv.code===code)
                 return s+(v ? v.unitPrice*(varietyQty[code]||0) : 0)
-              },0).toLocaleString()}</span>
+              },0))}</span>
             </VarietyQtySummary>
           </VarietyQtyList>
         )}
         {/* 수량 상태 표시 */}
         {requiredQty > 0 && (
           <VarietyStatus $status={qtyDiff > 0 ? 'over' : qtyDiff < 0 ? 'under' : 'ok'}>
-            {totalVarietyQty === 0 && `📋 설계 기준 필요 수량: ${requiredQty.toLocaleString()}주 (예비 5% 추가 권장: ${Math.ceil(requiredQty*1.05).toLocaleString()}주)`}
-            {qtyDiff === 0 && totalVarietyQty > 0 && `✅ 설계 수량 일치 — 예비 5% 추가 시 ${Math.ceil(requiredQty*1.05).toLocaleString()}주 권장`}
-            {qtyDiff > 0  && `⚠️ 설계보다 ${qtyDiff.toLocaleString()}주 초과`}
-            {qtyDiff < 0  && totalVarietyQty > 0 && `⚠️ 설계보다 ${Math.abs(qtyDiff).toLocaleString()}주 부족`}
+            {totalVarietyQty === 0 && text(
+              `📋 Design requirement: ${number(requiredQty)} plants (recommended with 5% reserve: ${number(Math.ceil(requiredQty * 1.05))})`,
+              `📋 설계 기준 필요 수량: ${number(requiredQty)}주 (예비 5% 추가 권장: ${number(Math.ceil(requiredQty * 1.05))}주)`,
+            )}
+            {qtyDiff === 0 && totalVarietyQty > 0 && text(
+              `✅ Quantity matches — ${number(Math.ceil(requiredQty * 1.05))} recommended with a 5% reserve`,
+              `✅ 설계 수량 일치 — 예비 5% 추가 시 ${number(Math.ceil(requiredQty * 1.05))}주 권장`,
+            )}
+            {qtyDiff > 0 && text(`⚠️ ${number(qtyDiff)} plants over the design quantity`, `⚠️ 설계보다 ${number(qtyDiff)}주 초과`)}
+            {qtyDiff < 0 && totalVarietyQty > 0 && text(`⚠️ ${number(Math.abs(qtyDiff))} plants below the design quantity`, `⚠️ 설계보다 ${number(Math.abs(qtyDiff))}주 부족`)}
           </VarietyStatus>
         )}
-        <NumberInput label="주간 (m)" value={inputs.plantSpacingM} min={0.5} max={3} step={0.1}
+        <NumberInput label={text('Plant spacing (m)', '주간 (m)')} value={inputs.plantSpacingM} min={0.5} max={3} step={0.1}
                      onChange={(v) => updateInputs({ plantSpacingM: v })} mt="0.75rem" />
       </Section>
 
       {/* 6. 유인방식 */}
-      <Section title="유인방식" icon="🌿">
+      <Section title={text('Training system', '유인방식')} icon="🌿">
         <DropdownWrap ref={trainRef}>
           <DropdownBtn onClick={() => setTrainOpen(v=>!v)}>
-            <span>{inputs.trainingType === 'V' ? 'V자형 — 유인줄 2줄' : 'I자형 — 유인줄 1줄'}</span>
+            <span>{inputs.trainingType === 'V'
+              ? text('V-trellis — 2 training strings', 'V자형 — 유인줄 2줄')
+              : text('I-trellis — 1 training string', 'I자형 — 유인줄 1줄')}</span>
             <DropdownArrow $open={trainOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {trainOpen && (
             <DropdownMenu>
               {([
-                { value: 'V' as TrainingType, label: 'V자형', desc: '홉당 유인줄 2줄, 양쪽 와이어 거치' },
-                { value: 'I' as TrainingType, label: 'I자형', desc: '홉당 유인줄 1줄, 두둑 중앙 와이어 거치' },
+                { value: 'V' as TrainingType, label: text('V-trellis', 'V자형'), desc: text('Two strings per plant, supported by wires on both sides', '홉당 유인줄 2줄, 양쪽 와이어 거치') },
+                { value: 'I' as TrainingType, label: text('I-trellis', 'I자형'), desc: text('One string per plant, supported by a center-row wire', '홉당 유인줄 1줄, 두둑 중앙 와이어 거치') },
               ] as const).map(opt => (
                 <DropdownItem key={opt.value} $selected={inputs.trainingType===opt.value}
                               onClick={() => { updateInputs({ trainingType: opt.value }); setTrainOpen(false) }}>
@@ -919,19 +957,22 @@ export function DesignInputForm() {
       </Section>
 
       {/* 7. 지역 */}
-      <Section title="지역 설정 (풍하중 기준)" icon="💨">
+      <Section title={text('Region (wind-load basis)', '지역 설정 (풍하중 기준)')} icon="💨">
         {activeProfile.loadModel === 'local-engineering-required' ? (
           <InfoBox>
-            북미 reference profile은 지역별 풍하중·토질·법규에 따른 현지 구조 검토가 필요합니다.
+            {text(
+              'The North America reference profile requires local structural review for regional wind loads, soil conditions, and applicable codes.',
+              '북미 reference profile은 지역별 풍하중·토질·법규에 따른 현지 구조 검토가 필요합니다.',
+            )}
           </InfoBox>
         ) : (
           <DropdownWrap ref={regionRef}>
             <DropdownBtn onClick={() => setRegionOpen(v=>!v)}>
               <span>
-                {REGION_OPTIONS.find(o=>o.value===inputs.region)?.label ?? '지역 선택'}
+                {getRegionLabel(inputs.region, locale) || text('Select a region', '지역 선택')}
                 {' '}
                 <span style={{fontSize:'0.75rem',color:'#6b7280'}}>
-                  기본풍속 {REGION_OPTIONS.find(o=>o.value===inputs.region)?.wind}
+                  {text('Basic wind speed', '기본풍속')} {REGION_OPTIONS.find(o=>o.value===inputs.region)?.wind}
                 </span>
               </span>
               <DropdownArrow $open={regionOpen}>▼</DropdownArrow>
@@ -941,8 +982,8 @@ export function DesignInputForm() {
                 {REGION_OPTIONS.map(opt => (
                   <DropdownItem key={opt.value} $selected={inputs.region===opt.value}
                                 onClick={() => { updateInputs({ region: opt.value }); setRegionOpen(false) }}>
-                    <DropdownItemName>{opt.label}</DropdownItemName>
-                    <DropdownItemSub>기본풍속 {opt.wind}</DropdownItemSub>
+                    <DropdownItemName>{getRegionLabel(opt.value, locale)}</DropdownItemName>
+                    <DropdownItemSub>{text('Basic wind speed', '기본풍속')} {opt.wind}</DropdownItemSub>
                     {inputs.region===opt.value && <DropdownCheck>✓</DropdownCheck>}
                   </DropdownItem>
                 ))}
@@ -953,22 +994,22 @@ export function DesignInputForm() {
       </Section>
 
       {/* 7. 견적 옵션 */}
-      <Section title="견적 옵션" icon="💰">
+      <Section title={text('Estimate options', '견적 옵션')} icon="💰">
         <MaterialList>
-          <ToggleOption label="시공비 포함" description="인건비·장비대·식재비·기타 직접 입력"
+          <ToggleOption label={text('Include installation', '시공비 포함')} description={text('Enter labor, equipment, planting, and other costs', '인건비·장비대·식재비·기타 직접 입력')}
                         checked={includeLabor} onChange={setIncludeLabor} />
           {includeLabor && (
             <LaborInputGrid>
               {([
-                { key: 'laborFee',     label: '인건비' },
-                { key: 'equipmentFee', label: '장비대' },
-                { key: 'plantingFee',  label: '식재비' },
-                { key: 'etcFee',       label: '기타'   },
+                { key: 'laborFee',     label: text('Labor', '인건비') },
+                { key: 'equipmentFee', label: text('Equipment', '장비대') },
+                { key: 'plantingFee',  label: text('Planting', '식재비') },
+                { key: 'etcFee',       label: text('Other', '기타') },
               ] as { key: keyof LaborCosts; label: string }[]).map(({ key, label }) => (
                 <LaborInputItem key={key}>
                   <LaborInputLabel>{label}</LaborInputLabel>
                   <LaborInputWrap>
-                    <LaborInputPrefix>₩</LaborInputPrefix>
+                    <LaborInputPrefix>{activeProfile.currency === 'KRW' ? '₩' : '$'}</LaborInputPrefix>
                     <LaborInputField
                       type="number" min={0} step={10000}
                       value={laborCosts[key] || ''}
@@ -979,25 +1020,25 @@ export function DesignInputForm() {
                 </LaborInputItem>
               ))}
               <LaborTotal>
-                합계: ₩{(
+                {text('Total', '합계')}: {price(
                 (laborCosts.laborFee || 0) +
                 (laborCosts.equipmentFee || 0) +
                 (laborCosts.plantingFee || 0) +
                 (laborCosts.etcFee || 0)
-              ).toLocaleString('ko-KR')}
+              )}
               </LaborTotal>
             </LaborInputGrid>
           )}
-          <ToggleOption label="부가세 포함 (10%)" description="종근(면세) 제외, 자재+시공비에 적용"
+          <ToggleOption label={text('Include VAT (10%)', '부가세 포함 (10%)')} description={text('Applied to materials and installation; rhizomes are exempt', '종근(면세) 제외, 자재+시공비에 적용')}
                         checked={includeVat} onChange={setIncludeVat} />
 
           {/* 할인 */}
-          <DiscountSectionLabel>🏷️ 할인 / 조정</DiscountSectionLabel>
+          <DiscountSectionLabel>🏷️ {text('Discount / adjustment', '할인 / 조정')}</DiscountSectionLabel>
           <DiscountBox>
             <DiscountRow>
-              <DiscountLabel>금액</DiscountLabel>
+              <DiscountLabel>{text('Amount', '금액')}</DiscountLabel>
               <DiscountInputWrap>
-                <DiscountPrefix>−₩</DiscountPrefix>
+                <DiscountPrefix>−{activeProfile.currency === 'KRW' ? '₩' : '$'}</DiscountPrefix>
                 <DiscountInput
                   type="number" min={0} step={10000}
                   value={discountAmount || ''}
@@ -1009,7 +1050,7 @@ export function DesignInputForm() {
             <DiscountMemoInput
               type="text"
               value={discountMemo}
-              placeholder="할인 사유 메모 (예: 농가 직거래 할인)"
+              placeholder={text('Discount note (e.g. direct farm sale)', '할인 사유 메모 (예: 농가 직거래 할인)')}
               onChange={e => setDiscount(discountAmount, e.target.value)}
             />
           </DiscountBox>

@@ -2,9 +2,10 @@
 
 import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
-import { formatKRW } from '@/lib/calculations/estimate'
-import type { EstimateLineItem, SafetyStatus } from '@/types'
+import type { SafetyStatus } from '@/types'
 import { getRegionalProfile, type MaterialRole } from '@/lib/design/regional-profiles'
+import { useLocale } from '@/components/i18n/LocaleProvider'
+import { getEstimateCategoryLabel, getEstimateItemLabel, getUnitLabel } from '@/lib/i18n'
 
 // ── 스타일 ──────────────────────────────────────────
 const PanelWrapper = styled.div`
@@ -286,44 +287,64 @@ const CAT_COLORS: Record<string, string> = {
   '종자비': '#22c55e',
 }
 
-const SAFETY_LABEL: Record<SafetyStatus, string> = {
-  GREEN:  '✅ 구조 안전',
-  YELLOW: '⚠️ 주의 — 와이어 보강 권장',
-  RED:    '🚨 위험 — 와이어 즉시 보강 필요',
+const SAFETY_LABEL: Record<SafetyStatus, { en: string; ko: string }> = {
+  GREEN:  { en: '✅ Structurally safe', ko: '✅ 구조 안전' },
+  YELLOW: { en: '⚠️ Caution — wire reinforcement recommended', ko: '⚠️ 주의 — 와이어 보강 권장' },
+  RED:    { en: '🚨 Danger — reinforce wire immediately', ko: '🚨 위험 — 와이어 즉시 보강 필요' },
+}
+
+const REFERENCE_MATERIAL_KO: Record<string, { name: string; specification: string }> = {
+  POLE_STEEL_60_2T_6M: { name: '아연도금 강관 지주', specification: '6 m 아연도금 강관; 카탈로그 유효 높이 5.1 m' },
+  ANCHOR_SCREW_600: { name: '나사말뚝 앵커', specification: '600 mm 나사식 지중 앵커' },
+  WIRE_32MM: { name: '고장력 스틸와이어', specification: '3.2 mm 카탈로그 와이어; 표기 인장강도 24.8 kN' },
+  POLE_US_WOOD_22FT: { name: '북미형 목재 지주', specification: '길이 22 ft × 상단 지름 5 in; 약 4 ft 매립, 18 ft 노출' },
+  ANCHOR_US_HELIX_48IN: { name: '베이스 플레이트형 지중 앵커', specification: '5/8 in 축 × 길이 48 in × 베이스 플레이트 6 in' },
+  WIRE_US_MAIN_5_16_7X19: { name: '아연도금 메인 케이블', specification: '지름 5/16 in, 7×19 스트랜드' },
+  WIRE_US_SUPPORT_3_16_7X7: { name: '아연도금 유인 지지 케이블', specification: '지름 3/16 in, 7×7 스트랜드' },
+  HARDWARE_US_TURNBUCKLE_1_2X12: { name: '케이블 턴버클', specification: '1/2 in × 12 in' },
+  TWINE_US_COIR_21FT: { name: '코이어 유인끈', specification: '21 ft 코이어 끈' },
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────
 export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
+  const { locale, text, number, currency } = useLocale()
   const { profileId, inputs, estimate, quantities, loads, isCalculating, discountMemo } = useDesignStore()
   const activeProfile = getRegionalProfile(profileId)
+  const money = (value: number) => currency(value, activeProfile.currency)
   const referenceQuantity = (role: MaterialRole) => {
     if (!quantities) return ''
-    if (role === 'pole') return `${quantities.totalPoleCount.toLocaleString()} each`
-    if (role === 'anchor' || role === 'hardware') return `${quantities.anchorCount.toLocaleString()} each`
+    if (role === 'pole') return text(`${number(quantities.totalPoleCount)} each`, `${number(quantities.totalPoleCount)}개`)
+    if (role === 'anchor' || role === 'hardware') return text(`${number(quantities.anchorCount)} each`, `${number(quantities.anchorCount)}개`)
     if (role === 'twine') {
       const count = quantities.plantCount * (inputs.trainingType === 'V' ? 2 : 1)
-      return `${count.toLocaleString()} strings`
+      return text(`${number(count)} strings`, `${number(count)}줄`)
     }
-    return `part of ${quantities.totalWireM.toLocaleString()} m system`
+    return text(`part of ${number(quantities.totalWireM)} m system`, `${number(quantities.totalWireM)} m 시스템에 포함`)
   }
+  const profileName = activeProfile.id === 'US_HIGH_TRELLIS'
+    ? text('North America 18 ft V-trellis', '북미형 18 ft V자 트렐리스')
+    : text('Korea galvanized steel V-trellis', '한국형 아연도금 강관 V자 트렐리스')
+  const profileDescription = activeProfile.id === 'US_HIGH_TRELLIS'
+    ? text('Quarter-acre high-trellis reference configuration based on Nebraska Extension EC3026.', 'Nebraska Extension EC3026에 기반한 1/4 acre 고식 트렐리스 참고 구성입니다.')
+    : text('Current HopEden steel-pole system for preliminary Korean hopyard planning.', '한국 홉 농장 예비 설계를 위한 현재 HopEden 강관 지주 시스템입니다.')
 
   return (
     <PanelWrapper>
       <PanelHeader>
-        <PanelTitle>{activeProfile.pricing.status === 'reference-only' ? 'Reference BOM' : '실시간 견적'}</PanelTitle>
-        {isCalculating && <CalcText>계산 중…</CalcText>}
+        <PanelTitle>{activeProfile.pricing.status === 'reference-only' ? text('Reference BOM', '참고 자재 명세') : text('Live estimate', '실시간 견적')}</PanelTitle>
+        {isCalculating && <CalcText>{text('Calculating…', '계산 중…')}</CalcText>}
       </PanelHeader>
 
       <ScrollArea>
         {/* 수량 요약 */}
         {quantities && (
           <SummaryBox>
-            <SummaryLabel>수량 요약</SummaryLabel>
-            <SummaryRow><SummaryKey>총 폴 수량</SummaryKey><SummaryVal>{quantities.totalPoleCount.toLocaleString('ko-KR')}개</SummaryVal></SummaryRow>
-            <SummaryRow><SummaryKey>와이어 길이</SummaryKey><SummaryVal>{quantities.totalWireM.toLocaleString('ko-KR')} m</SummaryVal></SummaryRow>
-            <SummaryRow><SummaryKey>앵커 수량</SummaryKey><SummaryVal>{quantities.anchorCount.toLocaleString('ko-KR')}개</SummaryVal></SummaryRow>
-            <SummaryRow><SummaryKey>재식 주수</SummaryKey><SummaryVal>{quantities.plantCount.toLocaleString('ko-KR')}주</SummaryVal></SummaryRow>
-            <SummaryRow><SummaryKey>종근 소요량</SummaryKey><SummaryVal>{quantities.rhizomeCount.toLocaleString('ko-KR')}주 (예비 10%)</SummaryVal></SummaryRow>
+            <SummaryLabel>{text('Quantity summary', '수량 요약')}</SummaryLabel>
+            <SummaryRow><SummaryKey>{text('Total poles', '총 폴 수량')}</SummaryKey><SummaryVal>{text(`${number(quantities.totalPoleCount)} each`, `${number(quantities.totalPoleCount)}개`)}</SummaryVal></SummaryRow>
+            <SummaryRow><SummaryKey>{text('Wire length', '와이어 길이')}</SummaryKey><SummaryVal>{number(quantities.totalWireM)} m</SummaryVal></SummaryRow>
+            <SummaryRow><SummaryKey>{text('Anchors', '앵커 수량')}</SummaryKey><SummaryVal>{text(`${number(quantities.anchorCount)} each`, `${number(quantities.anchorCount)}개`)}</SummaryVal></SummaryRow>
+            <SummaryRow><SummaryKey>{text('Plants', '재식 주수')}</SummaryKey><SummaryVal>{text(`${number(quantities.plantCount)} plants`, `${number(quantities.plantCount)}주`)}</SummaryVal></SummaryRow>
+            <SummaryRow><SummaryKey>{text('Rhizomes required', '종근 소요량')}</SummaryKey><SummaryVal>{text(`${number(quantities.rhizomeCount)} plants (10% reserve)`, `${number(quantities.rhizomeCount)}주 (예비 10%)`)}</SummaryVal></SummaryRow>
           </SummaryBox>
         )}
 
@@ -331,35 +352,35 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
         {loads && (
           <LoadCard>
             <LoadCardHeader>
-              <LoadCardTitle>구조 하중 분석</LoadCardTitle>
+              <LoadCardTitle>{text('Structural load analysis', '구조 하중 분석')}</LoadCardTitle>
             </LoadCardHeader>
             <LoadCardBody>
               <LoadRow>
-                <LoadLabel>홉 생체중 하중</LoadLabel>
-                <LoadValue>{loads.hopLoadKN.toFixed(2)} kN</LoadValue>
+                <LoadLabel>{text('Hop biomass load', '홉 생체중 하중')}</LoadLabel>
+                <LoadValue>{number(loads.hopLoadKN)} kN</LoadValue>
               </LoadRow>
               <LoadRow>
                 <div>
-                  <LoadLabel>풍압 하중</LoadLabel>
-                  <LoadSub>설계풍속 {loads.windSpeedMs.toFixed(1)} m/s</LoadSub>
+                  <LoadLabel>{text('Wind load', '풍압 하중')}</LoadLabel>
+                  <LoadSub>{text('Design wind speed', '설계풍속')} {number(loads.windSpeedMs)} m/s</LoadSub>
                 </div>
-                <LoadValue>{loads.windLoadKN.toFixed(2)} kN</LoadValue>
+                <LoadValue>{number(loads.windLoadKN)} kN</LoadValue>
               </LoadRow>
               <LoadRow>
-                <LoadLabel $bold>총 설계 하중</LoadLabel>
-                <LoadValue $bold>{loads.totalLoadKN.toFixed(2)} kN</LoadValue>
+                <LoadLabel $bold>{text('Total design load', '총 설계 하중')}</LoadLabel>
+                <LoadValue $bold>{number(loads.totalLoadKN)} kN</LoadValue>
               </LoadRow>
               <LoadRow>
-                <LoadLabel $bold>설계 인장력 (×1.5)</LoadLabel>
-                <LoadValue $bold>{loads.designTensionKN.toFixed(2)} kN</LoadValue>
+                <LoadLabel $bold>{text('Design tension (×1.5)', '설계 인장력 (×1.5)')}</LoadLabel>
+                <LoadValue $bold>{number(loads.designTensionKN)} kN</LoadValue>
               </LoadRow>
               <WireDivider>
-                <WireLabel>권장 와이어</WireLabel>
-                <WireValue>Φ{loads.recommendedWireDiameterMM}mm 이상</WireValue>
+                <WireLabel>{text('Recommended wire', '권장 와이어')}</WireLabel>
+                <WireValue>Φ{number(loads.recommendedWireDiameterMM)} mm {text('or larger', '이상')}</WireValue>
               </WireDivider>
             </LoadCardBody>
             <SafetyBarWrapper $status={loads.safetyStatus}>
-              {SAFETY_LABEL[loads.safetyStatus]}
+              {text(SAFETY_LABEL[loads.safetyStatus].en, SAFETY_LABEL[loads.safetyStatus].ko)}
             </SafetyBarWrapper>
           </LoadCard>
         )}
@@ -374,7 +395,7 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
               const toP = (v: number) => `${((v / total) * 100).toFixed(1)}%`
               return (
                 <RatioWrapper>
-                  <RatioLabel>비용 구성 비율</RatioLabel>
+                  <RatioLabel>{text('Cost breakdown', '비용 구성 비율')}</RatioLabel>
                   <RatioBar>
                     {estimate.materialCost > 0 && <RatioFill $color="#3b82f6" $width={toP(estimate.materialCost)} />}
                     {estimate.laborCost > 0    && <RatioFill $color="#fb923c" $width={toP(estimate.laborCost)} />}
@@ -382,13 +403,13 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
                   </RatioBar>
                   <RatioLegend>
                     {[
-                      { label: '자재비', color: '#3b82f6', value: estimate.materialCost },
-                      { label: '시공비', color: '#fb923c', value: estimate.laborCost },
-                      { label: '종자비', color: '#22c55e', value: estimate.seedCost },
+                      { category: '자재비', color: '#3b82f6', value: estimate.materialCost },
+                      { category: '시공비', color: '#fb923c', value: estimate.laborCost },
+                      { category: '종자비', color: '#22c55e', value: estimate.seedCost },
                     ].filter(i => i.value > 0).map((item) => (
-                      <LegendItem key={item.label}>
+                      <LegendItem key={item.category}>
                         <LegendDot $color={item.color} />
-                        <LegendText>{item.label} {((item.value / total) * 100).toFixed(1)}%</LegendText>
+                        <LegendText>{getEstimateCategoryLabel(item.category, locale)} {number(Math.round((item.value / total) * 1000) / 10)}%</LegendText>
                       </LegendItem>
                     ))}
                   </RatioLegend>
@@ -407,10 +428,10 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
                     <CatSummary>
                       <CatLeft>
                         <CatDot $color={CAT_COLORS[cat]} />
-                        <CatName>{cat}</CatName>
+                        <CatName>{getEstimateCategoryLabel(cat, locale)}</CatName>
                       </CatLeft>
                       <CatRight>
-                        <CatTotal>{formatKRW(catTotal)}</CatTotal>
+                        <CatTotal>{money(catTotal)}</CatTotal>
                         <CatArrow>▼</CatArrow>
                       </CatRight>
                     </CatSummary>
@@ -418,10 +439,10 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
                       {items.map((item) => (
                         <LineItem key={item.code}>
                           <LineLeft>
-                            <LineName>{item.name}</LineName>
-                            <LineMeta>{item.quantity.toLocaleString('ko-KR')} {item.unit} × {formatKRW(item.unitPrice)}</LineMeta>
+                            <LineName>{getEstimateItemLabel(item.code, item.name, locale)}</LineName>
+                            <LineMeta>{number(item.quantity)} {getUnitLabel(item.unit, locale)} × {money(item.unitPrice)}</LineMeta>
                           </LineLeft>
-                          <LineTotal>{formatKRW(item.totalPrice)}</LineTotal>
+                          <LineTotal>{money(item.totalPrice)}</LineTotal>
                         </LineItem>
                       ))}
                     </CatBody>
@@ -432,66 +453,76 @@ export function EstimatePanel({ onPDFClick }: { onPDFClick?: () => void }) {
 
             {/* 합계 */}
             <TotalBox>
-              <TotalRow><TotalLabel>자재비</TotalLabel><TotalValue>{formatKRW(estimate.materialCost)}</TotalValue></TotalRow>
-              <TotalRow><TotalLabel>시공비</TotalLabel><TotalValue>{formatKRW(estimate.laborCost)}</TotalValue></TotalRow>
-              <TotalRow><TotalLabel>종자비</TotalLabel><TotalValue>{formatKRW(estimate.seedCost)}</TotalValue></TotalRow>
+              <TotalRow><TotalLabel>{getEstimateCategoryLabel('자재비', locale)}</TotalLabel><TotalValue>{money(estimate.materialCost)}</TotalValue></TotalRow>
+              <TotalRow><TotalLabel>{getEstimateCategoryLabel('시공비', locale)}</TotalLabel><TotalValue>{money(estimate.laborCost)}</TotalValue></TotalRow>
+              <TotalRow><TotalLabel>{getEstimateCategoryLabel('종자비', locale)}</TotalLabel><TotalValue>{money(estimate.seedCost)}</TotalValue></TotalRow>
               {(estimate.discount ?? 0) > 0 && (
                 <TotalRow>
                   <TotalLabel style={{color:'#dc2626'}}>
-                    🏷️ 할인
+                    🏷️ {text('Discount', '할인')}
                     {discountMemo && <span style={{fontSize:'0.65rem',color:'#9ca3af',marginLeft:'0.3rem'}}>({discountMemo})</span>}
                   </TotalLabel>
-                  <TotalValue style={{color:'#dc2626'}}>−{formatKRW(estimate.discount)}</TotalValue>
+                  <TotalValue style={{color:'#dc2626'}}>−{money(estimate.discount)}</TotalValue>
                 </TotalRow>
               )}
               <TotalDivider>
-                <TotalRow><TotalLabel>소계</TotalLabel><TotalValue>{formatKRW(estimate.subtotal)}</TotalValue></TotalRow>
+                <TotalRow><TotalLabel>{text('Subtotal', '소계')}</TotalLabel><TotalValue>{money(estimate.subtotal)}</TotalValue></TotalRow>
                 {estimate.vat > 0 && (
                   <TotalRow>
-                    <TotalLabel>부가세 (10%) <span style={{fontSize:'0.65rem',color:'#9ca3af'}}>종근 면세</span></TotalLabel>
-                    <TotalValue>{formatKRW(estimate.vat)}</TotalValue>
+                    <TotalLabel>{text('VAT (10%)', '부가세 (10%)')} <span style={{fontSize:'0.65rem',color:'#9ca3af'}}>{text('rhizomes exempt', '종근 면세')}</span></TotalLabel>
+                    <TotalValue>{money(estimate.vat)}</TotalValue>
                   </TotalRow>
                 )}
                 <GrandTotal>
-                  <GrandLabel>최종 합계</GrandLabel>
-                  <GrandValue>{formatKRW(estimate.total)}</GrandValue>
+                  <GrandLabel>{text('Final total', '최종 합계')}</GrandLabel>
+                  <GrandValue>{money(estimate.total)}</GrandValue>
                 </GrandTotal>
                 <PerSqm>
-                  ㎡당 {formatKRW(Math.round(estimate.total / (useDesignStore.getState().inputs.widthM * useDesignStore.getState().inputs.heightM)))}
+                  {money(Math.round(estimate.total / (useDesignStore.getState().inputs.widthM * useDesignStore.getState().inputs.heightM)))}{text(' per ㎡', '/㎡')}
                 </PerSqm>
               </TotalDivider>
             </TotalBox>
 
-            <OutlineBtn onClick={onPDFClick}>📄 견적서 PDF 출력</OutlineBtn>
+            <OutlineBtn onClick={onPDFClick}>📄 {text('Export estimate PDF', '견적서 PDF 출력')}</OutlineBtn>
           </>
         ) : activeProfile.pricing.status === 'reference-only' && quantities ? (
           <ReferenceCard>
             <ReferenceHeader>
-              <ReferenceTitle>{activeProfile.name}</ReferenceTitle>
-              <ReferenceSub>{activeProfile.description}</ReferenceSub>
+              <ReferenceTitle>{profileName}</ReferenceTitle>
+              <ReferenceSub>{profileDescription}</ReferenceSub>
             </ReferenceHeader>
             <ReferenceList>
               {activeProfile.materials.map((material) => (
                 <ReferenceItem key={material.code}>
                   <ReferenceItemTop>
-                    <ReferenceName>{material.name}</ReferenceName>
+                    <ReferenceName>{locale === 'ko' ? REFERENCE_MATERIAL_KO[material.code]?.name ?? material.name : getEstimateItemLabel(material.code, material.name, locale)}</ReferenceName>
                     <ReferenceQty>{referenceQuantity(material.role)}</ReferenceQty>
                   </ReferenceItemTop>
-                  <ReferenceSpec>{material.specification}</ReferenceSpec>
+                  <ReferenceSpec>{locale === 'ko' ? REFERENCE_MATERIAL_KO[material.code]?.specification ?? material.specification : material.specification}</ReferenceSpec>
                 </ReferenceItem>
               ))}
             </ReferenceList>
             {activeProfile.sources.map((source) => (
               <ReferenceSource key={source.url} href={source.url} target="_blank" rel="noreferrer">
-                Source: {source.label} ↗
+                {text('Source', '출처')}: {source.label} ↗
               </ReferenceSource>
             ))}
-            <ReferenceWarning>{activeProfile.engineeringDisclaimer}</ReferenceWarning>
+            <ReferenceWarning>
+              {activeProfile.id === 'US_HIGH_TRELLIS'
+                ? text(
+                    'Reference layout for planning and comparison only; local loads, soil, codes, and engineering review govern construction.',
+                    '계획 및 비교용 참고 배치입니다. 실제 시공은 현지 하중, 토질, 법규 및 구조기술 검토를 따라야 합니다.',
+                  )
+                : text(
+                    'Preliminary planning estimate; requires review by a qualified local engineer.',
+                    '예비 계획 견적이며, 자격을 갖춘 현지 기술자의 검토가 필요합니다.',
+                  )}
+            </ReferenceWarning>
           </ReferenceCard>
         ) : (
           <EmptyState>
             <EmptyIcon>💰</EmptyIcon>
-            <EmptyText>설계 정보를 입력하면<br />실시간으로 견적이 계산됩니다</EmptyText>
+            <EmptyText>{text('Enter design information to calculate', '설계 정보를 입력하면')}<br />{text('a live estimate.', '실시간으로 견적이 계산됩니다')}</EmptyText>
           </EmptyState>
         )}
       </ScrollArea>

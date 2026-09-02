@@ -1,7 +1,7 @@
 # 🌿 HopEden Designer
 
-> 홉 재배 시설설계 & 비용산출 플랫폼
-> 농업회사법인 홉이든
+> Hopyard trellis planning and cost estimation
+> Built by HopEden Agricultural Corporation
 
 ## OpenAI WebMCP Challenge
 
@@ -24,6 +24,8 @@ HopEden Designer is an existing human-operated hopyard planning application bein
 - Production after deployment: `https://hopyard.luplin.com/design/demo`
 
 The guest route does not require an account. Saving to a user project remains available only in the authenticated `/design` workspace.
+
+The application starts in English for challenge reviewers. Use the `EN / 한국어` control to switch the complete UI and estimate PDF to Korean; the preference is stored locally in the browser. WebMCP tool contracts remain English for interoperable agent use.
 
 ### WebMCP tools
 
@@ -80,22 +82,22 @@ All structural results are preliminary planning information. Local wind loads, s
 
 ---
 
-## 빠른 시작
+## Quick start
 
-### 1. 의존성 설치
+### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. 환경변수 설정 (인증·저장 기능 사용 시)
+### 2. Configure environment variables (authentication and saved projects)
 ```bash
 cp .env.example .env.local
-# self-hosted Supabase의 anon/publishable key 입력
+# Add the self-hosted Supabase anon/publishable key
 ```
 
-`/design/demo` 게스트 경로는 Supabase가 없어도 bundled reference catalog로 동작합니다.
+The `/design/demo` guest route can use its bundled reference catalog when Supabase is unavailable.
 
-### 3. 개발 서버 실행
+### 3. Start the development server
 ```bash
 npm run dev
 # http://localhost:3434
@@ -103,79 +105,77 @@ npm run dev
 
 ---
 
-## 주요 명령어
+## Commands
 
-| 명령어 | 설명 |
-|--------|------|
-| `npm run dev` | 개발 서버 실행 |
-| `npm run build` | 프로덕션 빌드 |
-| `npm test` | 계산·프로파일·WebMCP 계약 테스트 |
-| `npm run typecheck` | TypeScript 타입 검사 |
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Create the production build |
+| `npm test` | Run calculation, profile, i18n, deployment, and WebMCP contract tests |
+| `npm run typecheck` | Run the TypeScript type checker |
 
 ---
 
-## 프로젝트 구조
+## Project structure
 
 ```
 hopeden-designer/
 ├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   │   ├── prices/        # 자재 가격 맵 반환
-│   │   └── admin/         # 관리자 CRUD
-│   └── (dashboard)/design # 설계 메인 페이지
+│   ├── api/               # API routes
+│   │   ├── prices/        # Material price map
+│   │   └── admin/         # Administrative CRUD
+│   └── design             # Design workspace and public demo
 ├── lib/
-│   ├── calculations/      # ⭐ 순수 계산 함수
-│   │   ├── quantities.ts  #   폴·와이어·종근 수량
-│   │   ├── loads.ts       #   홉 하중·풍압 계산
-│   │   └── estimate.ts    #   견적 비용 계산
+│   ├── calculations/      # Pure calculation functions
+│   │   ├── quantities.ts  # Pole, wire, and plant quantities
+│   │   ├── loads.ts       # Hop and wind loads
+│   │   └── estimate.ts    # Cost estimate
 │   ├── supabase/          # Supabase browser/server client
-│   └── validators/        # Zod 입력 검증
+│   └── webmcp/            # WebMCP contracts and registration
 ├── stores/
-│   ├── designStore.ts     # 설계 상태 (Zustand)
-│   └── priceStore.ts      # 자재 가격 캐시
-├── types/index.ts         # 공통 TypeScript 타입
-└── supabase/schema.sql    # DB 스키마와 기준 데이터
+│   ├── designStore.ts     # Shared design state (Zustand)
+│   └── candidateStore.ts  # Human-reviewed agent alternatives
+└── types/index.ts         # Shared TypeScript types
 ```
 
 ---
 
-## 핵심 원칙
+## Engineering principles
 
-### ⚠️ 가격 하드코딩 절대 금지
+### Do not invent live prices
 
 ```typescript
-// ✅ 올바른 방식 — 항상 priceStore 또는 API에서 참조
+// Correct: read active market prices from the store/API.
 const { getPrice } = usePriceStore()
 const poleCost = getPrice('POLE_STEEL_60_2T_6M') * poleCount
 
-// ❌ 절대 금지
+// Incorrect: claim a hard-coded value is live pricing.
 const poleCost = 35000 * poleCount
 ```
 
-### 계산 로직 분리
+### Keep calculations pure
 
-모든 수량·하중·비용 계산은 `/lib/calculations/` 의 **순수 함수**로만 작성합니다.  
-컴포넌트 내부에 계산 로직을 작성하지 않습니다.
+Quantity, load, and cost calculations live in pure functions under `/lib/calculations/`, outside UI components.
 
-### TypeScript strict 모드
+### TypeScript strict mode
 
-`any` 타입 사용 금지. 모든 타입은 `/types/index.ts` 에서 참조합니다.
+Avoid `any`; shared contracts belong in `/types/index.ts`.
 
 ---
 
-## 기술 스택
+## Technology
 
 - **Frontend**: Next.js 14 + React 18 + TypeScript (strict)
 - **2D**: Konva.js + react-konva
 - **3D**: Three.js + @react-three/fiber
-- **상태관리**: Zustand
-- **DB/Auth**: Supabase
-- **스타일**: Tailwind CSS + shadcn/ui
-- **배포**: Vercel + Supabase
+- **State**: Zustand
+- **DB/Auth**: Self-hosted Supabase
+- **Styling**: Tailwind CSS + styled-components
+- **Deployment**: GitHub Actions → iwinv production server
 
 ---
 
-농업회사법인 홉이든 | hopeden.kr
+HopEden Agricultural Corporation | hopeden.kr
 
 ## License
 

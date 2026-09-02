@@ -2,10 +2,12 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import styled from 'styled-components'
 import { createClient } from '@/lib/supabase/client'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 // ── 스타일 ──────────────────────────────────────────
 const PageWrapper = styled.div`
@@ -20,6 +22,12 @@ const PageWrapper = styled.div`
 const Container = styled.div`
     width: 100%;
     max-width: 448px;
+`
+
+const SwitcherRow = styled.div`
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
 `
 
 const LogoArea = styled.div`
@@ -202,21 +210,21 @@ const Copyright = styled.p`
 
 // ── 컴포넌트 ─────────────────────────────────────────
 function LoginContent() {
-  const router = useRouter()
+  const { text } = useLocale()
   const params = useSearchParams()
   const callbackUrl = params.get('callbackUrl') ?? '/design'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<'email-confirmation' | 'credentials' | null>(null)
 
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError('')
+    setError(null)
 
     const { error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -226,11 +234,7 @@ function LoginContent() {
     setIsLoading(false)
 
     if (authError) {
-      setError(
-        authError.message.includes('Email not confirmed')
-          ? '이메일 인증이 필요합니다. 가입 시 받은 이메일을 확인해주세요.'
-          : '이메일 또는 비밀번호가 올바르지 않습니다'
-      )
+      setError(authError.message.includes('Email not confirmed') ? 'email-confirmation' : 'credentials')
     } else {
       // router.push 대신 window.location으로 강제 이동 (미들웨어 세션 갱신 보장)
       window.location.href = callbackUrl
@@ -247,22 +251,25 @@ function LoginContent() {
   return (
     <PageWrapper>
       <Container>
+        <SwitcherRow><LanguageSwitcher /></SwitcherRow>
         <LogoArea>
           <Link href="/">
             <LogoEmoji>🌿</LogoEmoji>
           </Link>
           <Title>HopEden Designer</Title>
-          <Subtitle>홉 농장 설계 플랫폼에 오신 것을 환영합니다</Subtitle>
+          <Subtitle>{text('Welcome to the hop farm design platform', '홉 농장 설계 플랫폼에 오신 것을 환영합니다')}</Subtitle>
         </LogoArea>
 
         <Card>
           <CardHeader>
-            <CardTitle>로그인</CardTitle>
-            <CardDesc>계정으로 로그인하여 설계를 저장하세요</CardDesc>
+            <CardTitle>{text('Sign in', '로그인')}</CardTitle>
+            <CardDesc>{text('Sign in to save your designs', '계정으로 로그인하여 설계를 저장하세요')}</CardDesc>
           </CardHeader>
 
           <CardBody>
-            {error && <ErrorBox>⚠️ {error}</ErrorBox>}
+            {error && <ErrorBox>⚠️ {error === 'email-confirmation'
+              ? text('Please verify your email. Check the message sent when you registered.', '이메일 인증이 필요합니다. 가입 시 받은 이메일을 확인해주세요.')
+              : text('The email or password is incorrect.', '이메일 또는 비밀번호가 올바르지 않습니다')}</ErrorBox>}
 
             <GoogleButton onClick={handleGoogle} type="button">
               <svg width="20" height="20" viewBox="0 0 24 24">
@@ -271,14 +278,14 @@ function LoginContent() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Google 계정으로 로그인
+              {text('Continue with Google', 'Google 계정으로 로그인')}
             </GoogleButton>
 
-            <Divider><span>또는 이메일로 로그인</span></Divider>
+            <Divider><span>{text('or sign in with email', '또는 이메일로 로그인')}</span></Divider>
 
             <Form onSubmit={handleSubmit}>
               <Field>
-                <Label>이메일</Label>
+                <Label>{text('Email', '이메일')}</Label>
                 <Input
                   type="email"
                   value={email}
@@ -288,7 +295,7 @@ function LoginContent() {
                 />
               </Field>
               <Field>
-                <Label>비밀번호</Label>
+                <Label>{text('Password', '비밀번호')}</Label>
                 <Input
                   type="password"
                   value={password}
@@ -299,18 +306,18 @@ function LoginContent() {
               </Field>
               <SubmitButton type="submit" disabled={isLoading} $loading={isLoading}>
                 {isLoading ? '⌛' : '🌿'}
-                {isLoading ? '로그인 중…' : '로그인'}
+                {isLoading ? text('Signing in…', '로그인 중…') : text('Sign in', '로그인')}
               </SubmitButton>
             </Form>
 
             <FooterText>
-              계정이 없으신가요?{' '}
-              <Link href="/register">회원가입</Link>
+              {text("Don't have an account?", '계정이 없으신가요?')}{' '}
+              <Link href="/register">{text('Create one', '회원가입')}</Link>
             </FooterText>
           </CardBody>
         </Card>
 
-        <Copyright>© 2026 농업회사법인 홉이든 · hopeden.kr</Copyright>
+        <Copyright>© 2026 {text('HopEden Agricultural Corporation', '농업회사법인 홉이든')} · hopeden.kr</Copyright>
       </Container>
     </PageWrapper>
   )

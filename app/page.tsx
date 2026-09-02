@@ -1,5 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import styled from 'styled-components'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 const Page = styled.main`
     min-height: 100vh;
@@ -117,14 +121,15 @@ const Footer = styled.footer`
     color: #9ca3af;
 `
 
-const FEATURES = [
-  { icon: '🌱', title: '종자 비용 산출', desc: '품종별 종근 수량·비용 자동 계산' },
-  { icon: '🏗️', title: '시설 설계', desc: '폴·와이어 하중 KBC 기준 검증' },
-  { icon: '🗺️', title: '2D/3D 시각화', desc: '실시간 평면도·투시도 확인' },
-  { icon: '💰', title: '실시간 견적', desc: '자재 변경 즉시 비용 반영' },
-]
-
 export default function LandingPage() {
+  const { text } = useLocale()
+  const features = [
+    { icon: '🌱', title: text('Seed cost estimate', '종자 비용 산출'), desc: text('Automatically calculate rootstock quantities and costs by variety', '품종별 종근 수량·비용 자동 계산') },
+    { icon: '🏗️', title: text('Infrastructure design', '시설 설계'), desc: text('Validate pole and wire loads against KBC standards', '폴·와이어 하중 KBC 기준 검증') },
+    { icon: '🗺️', title: text('2D/3D visualization', '2D/3D 시각화'), desc: text('Preview plans and perspective views in real time', '실시간 평면도·투시도 확인') },
+    { icon: '💰', title: text('Real-time estimates', '실시간 견적'), desc: text('See cost updates as soon as materials change', '자재 변경 즉시 비용 반영') },
+  ]
+
   return (
     <Page>
       <Header>
@@ -132,23 +137,26 @@ export default function LandingPage() {
           <LogoEmoji>🌿</LogoEmoji>
           <LogoText>HopEden Designer</LogoText>
         </Logo>
+        <LanguageSwitcher />
       </Header>
 
       <Hero>
         <HeroTitle>
-          홉 농장의 첫 삽,<br />
-          <em>정확하게 시작하세요</em>
+          {text('Build your hop farm,', '홉 농장의 첫 삽,')}<br />
+          <em>{text('starting with precision', '정확하게 시작하세요')}</em>
         </HeroTitle>
         <HeroDesc>
-          종자 비용부터 지주 시설 설계·자재비까지 한 번에 산출하고,
-          실시간 견적을 받을 수 있는 스마트 농업 설계 플랫폼
+          {text(
+            'A smart agricultural design platform that calculates everything from seed costs to support infrastructure and materials, with real-time estimates.',
+            '종자 비용부터 지주 시설 설계·자재비까지 한 번에 산출하고, 실시간 견적을 받을 수 있는 스마트 농업 설계 플랫폼'
+          )}
         </HeroDesc>
-        <CTAButton href="/design">무료로 설계 시작하기 →</CTAButton>
+        <CTAButton href="/design">{text('Start designing for free →', '무료로 설계 시작하기 →')}</CTAButton>
       </Hero>
 
       <Features>
         <FeatureGrid>
-          {FEATURES.map((f) => (
+          {features.map((f) => (
             <FeatureCard key={f.title}>
               <FeatureIcon>{f.icon}</FeatureIcon>
               <FeatureTitle>{f.title}</FeatureTitle>
@@ -158,7 +166,7 @@ export default function LandingPage() {
         </FeatureGrid>
       </Features>
 
-      <Footer>농업회사법인 홉이든 | hopeden.kr</Footer>
+      <Footer>{text('HopEden Agricultural Corporation', '농업회사법인 홉이든')} | hopeden.kr</Footer>
     </Page>
   )
 }

@@ -3,6 +3,7 @@
 import styled from 'styled-components'
 import type { DesignCandidate } from '@/lib/design/candidate-workspace'
 import { useCandidateStore } from '@/stores/candidateStore'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 const Tray = styled.section`
   position:absolute;left:1rem;right:1rem;bottom:1rem;z-index:20;
@@ -45,26 +46,34 @@ const ActionButton = styled.button<{ $primary?: boolean }>`
   border-radius:0.5rem;padding:0.4rem 0.65rem;font-size:0.68rem;font-weight:700;cursor:pointer;
 `
 
-function formatCost(candidate: DesignCandidate): string {
-  const total = candidate.simulation.estimate?.total
-  if (total === null || total === undefined) return 'Pricing needed'
-  return `₩${total.toLocaleString('ko-KR')}`
-}
-
 export function CandidateTray() {
   const visibleCandidates = useCandidateStore((state) => state.visibleCandidates)
   const previewCandidate = useCandidateStore((state) => state.previewCandidate)
   const preview = useCandidateStore((state) => state.preview)
   const applyPreview = useCandidateStore((state) => state.applyPreview)
   const discardPreview = useCandidateStore((state) => state.discardPreview)
+  const {text,number,currency}=useLocale()
+
+  const formatCost = (candidate:DesignCandidate):string => {
+    const total = candidate.simulation.estimate?.total
+    if (total === null || total === undefined) return text('Pricing needed', '가격 정보 필요')
+    return currency(total,'KRW')
+  }
+
+  const formatSafety = (status:string|undefined):string => {
+    if (status === 'GREEN') return text('Safe', '안전')
+    if (status === 'YELLOW') return text('Caution', '주의')
+    if (status === 'RED') return text('Risk', '위험')
+    return text('Review', '검토 필요')
+  }
 
   if (visibleCandidates.length === 0) return null
 
   return (
-    <Tray aria-label="Agent design candidates">
+    <Tray aria-label={text('Agent design candidates', '에이전트 설계 후보')}>
       <Header>
-        <Title>Agent design alternatives</Title>
-        <Hint>Preview changes are not saved until you approve them.</Hint>
+        <Title>{text('Agent design alternatives', '에이전트 설계 대안')}</Title>
+        <Hint>{text('Preview changes are not saved until you approve them.', '미리보기 변경 사항은 승인할 때까지 저장되지 않습니다.')}</Hint>
       </Header>
       <Cards>
         {visibleCandidates.map((candidate) => {
@@ -78,12 +87,12 @@ export function CandidateTray() {
               </CardTop>
               <Rationale>{candidate.rationale || simulation.profile.name}</Rationale>
               <Metrics>
-                <Metric><MetricLabel>Plants</MetricLabel><MetricValue>{simulation.quantities.plantCount.toLocaleString()}</MetricValue></Metric>
-                <Metric><MetricLabel>Safety</MetricLabel><MetricValue>{simulation.loads?.safetyStatus ?? 'Review'}</MetricValue></Metric>
-                <Metric><MetricLabel>Estimate</MetricLabel><MetricValue>{formatCost(candidate)}</MetricValue></Metric>
+                <Metric><MetricLabel>{text('Plants', '식재 수')}</MetricLabel><MetricValue>{number(simulation.quantities.plantCount)}</MetricValue></Metric>
+                <Metric><MetricLabel>{text('Safety', '안전성')}</MetricLabel><MetricValue>{formatSafety(simulation.loads?.safetyStatus)}</MetricValue></Metric>
+                <Metric><MetricLabel>{text('Estimate', '예상 비용')}</MetricLabel><MetricValue>{formatCost(candidate)}</MetricValue></Metric>
               </Metrics>
               <PreviewButton $active={active} onClick={() => preview(simulation.candidateId)}>
-                {active ? 'Previewing' : 'Preview in canvas'}
+                {active ? text('Previewing', '미리보기 중') : text('Preview in canvas', '캔버스에서 미리보기')}
               </PreviewButton>
             </Card>
           )
@@ -92,11 +101,15 @@ export function CandidateTray() {
       {previewCandidate && (
         <ReviewBar>
           <ReviewText>
-            <strong>{previewCandidate.label}</strong> is an uncommitted preview. Review the 2D/3D canvas and calculated quantities before applying.
+            <strong>{previewCandidate.label}</strong>{' '}
+            {text(
+              'is an uncommitted preview. Review the 2D/3D canvas and calculated quantities before applying.',
+              '은(는) 아직 적용되지 않은 미리보기입니다. 적용하기 전에 2D/3D 캔버스와 계산 수량을 확인하세요.',
+            )}
           </ReviewText>
           <ReviewActions>
-            <ActionButton onClick={discardPreview}>Discard</ActionButton>
-            <ActionButton $primary onClick={applyPreview}>Apply design</ActionButton>
+            <ActionButton onClick={discardPreview}>{text('Discard', '취소')}</ActionButton>
+            <ActionButton $primary onClick={applyPreview}>{text('Apply design', '설계 적용')}</ActionButton>
           </ReviewActions>
         </ReviewBar>
       )}

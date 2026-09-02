@@ -52,12 +52,12 @@ export async function POST(req: Request) {
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return Response.json({ success: false, error: '로그인 필요' }, { status: 401 })
+    if (!user) return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
 
     const body = await req.json()
     const { code, name, characteristics, unitPrice, recommendedSpacingM, isOwnBrand } = body
     if (!code || !name || !unitPrice) {
-      return Response.json({ success: false, error: '코드, 품종명, 단가는 필수입니다' }, { status: 400 })
+      return Response.json({ success: false, error: 'Code, variety name, and unit price are required' }, { status: 400 })
     }
 
     const { data, error } = await supabase.from('hop_varieties').insert({

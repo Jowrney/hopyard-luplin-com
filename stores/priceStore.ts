@@ -24,7 +24,7 @@ export const usePriceStore = create<PriceStoreState>()((set, get) => ({
 
     try {
       const res = await fetch('/api/prices')
-      if (!res.ok) throw new Error('가격 데이터 로드 실패')
+      if (!res.ok) throw new Error('Failed to load price data')
 
       const data = await res.json() as { prices: PriceMap }
       set({
@@ -33,7 +33,7 @@ export const usePriceStore = create<PriceStoreState>()((set, get) => ({
         isLoading: false,
       })
     } catch (error) {
-      console.error('가격 로드 오류:', error)
+      console.error('Price loading error:', error)
       set({ isLoading: false })
     }
   },

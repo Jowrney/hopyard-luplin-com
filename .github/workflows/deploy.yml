@@ -4,22 +4,80 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hopyard-production
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Check out the pushed commit
+        uses: actions/checkout@v4
+
+      - name: Package tracked source
+        run: |
+          mkdir -p .deploy
+          git archive --format=tar.gz \
+            --output=".deploy/release-${GITHUB_SHA}.tar.gz" \
+            "${GITHUB_SHA}"
+
+      - name: Upload release archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: .deploy/release-${{ github.sha }}.tar.gz
+          target: /tmp
+          strip_components: 1
+
+      - name: Install, build, restart, and verify
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /home/jowrney/www/luplin.com/hopyard
-            git pull origin main
-            npm install
+            set -eu
+            APP=/home/jowrney/www/luplin.com/hopyard
+            RELEASE=/tmp/release-${{ github.sha }}.tar.gz
+            STAGING=/tmp/hopyard-${{ github.sha }}
+
+            rm -rf "$STAGING"
+            mkdir -p "$STAGING"
+            tar -xzf "$RELEASE" -C "$STAGING"
+
+            rsync -a --delete \
+              --exclude='.env' \
+              --exclude='.env.local' \
+              --exclude='.env.production' \
+              --exclude='.git/' \
+              --exclude='.next/' \
+              --exclude='node_modules/' \
+              "$STAGING/" "$APP/"
+
+            cd "$APP"
+            npm ci
             npm run build
             pm2 restart hopyard
-          
+
+            attempts=0
+            until curl -fsS http://127.0.0.1:3000/design/demo >/dev/null; do
+              attempts=$((attempts + 1))
+              if [ "$attempts" -ge 20 ]; then
+                pm2 logs hopyard --lines 80 --nostream
+                exit 1
+              fi
+              sleep 1
+            done
+
+            rm -rf "$STAGING" "$RELEASE"

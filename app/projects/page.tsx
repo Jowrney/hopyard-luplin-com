@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styled from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 // ── 타입 ──────────────────────────────────────────────
 interface Design {
@@ -37,19 +39,11 @@ interface Project {
 }
 
 // ── 유틸 ──────────────────────────────────────────────
-const formatDate = (d: string | null | undefined) => {
-  if (!d) return '—'
-  const dt = new Date(d)
-  return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('ko-KR')
-}
-const KRW = (n: number | undefined | null) => `₩${(n ?? 0).toLocaleString('ko-KR')}`
-
 const SAFETY_COLOR = {
   GREEN:  { bg: '#f0fdf4', text: '#16a34a' },
   YELLOW: { bg: '#fefce8', text: '#ca8a04' },
   RED:    { bg: '#fef2f2', text: '#dc2626' },
 }
-const SAFETY_LABEL = { GREEN: '안전', YELLOW: '주의', RED: '위험' }
 
 // ── 스타일 ──────────────────────────────────────────
 const PageWrapper = styled.div`
@@ -112,6 +106,12 @@ const NewDesignButton = styled(Link)`
     transition: background 0.15s;
 
     &:hover { background: #234820; }
+`
+
+const HeaderRight = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 `
 
 const Content = styled.div`
@@ -398,6 +398,7 @@ const Toast = styled.div`
 
 // ── 컴포넌트 ─────────────────────────────────────────
 export default function ProjectsPage() {
+  const { text, number, currency, date } = useLocale()
   const router = useRouter()
   const { loadFromSaved } = useDesignStore()
   const [projects, setProjects] = useState<Project[]>([])
@@ -405,6 +406,18 @@ export default function ProjectsPage() {
   const [openProjects, setOpenProjects] = useState<Set<string>>(new Set())
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+
+  const formatProjectDate = (value: string | null | undefined) => {
+    if (!value) return '—'
+    const parsed = new Date(value)
+    return Number.isNaN(parsed.getTime()) ? '—' : date(parsed)
+  }
+
+  const safetyLabel = {
+    GREEN: text('Safe', '안전'),
+    YELLOW: text('Caution', '주의'),
+    RED: text('Danger', '위험'),
+  }
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -417,13 +430,13 @@ export default function ProjectsPage() {
     // 빈 응답 방어 처리
     const text = await res.text()
     if (!text || !text.trim()) {
-      console.error('projects API: 빈 응답')
+      console.error('Projects API returned an empty response')
       setIsLoading(false)
       return
     }
     let data: { success: boolean; data: Project[]; error?: string }
     try { data = JSON.parse(text) }
-    catch (e) { console.error('projects API JSON 파싱 오류:', e, text); setIsLoading(false); return }
+    catch (e) { console.error('Projects API JSON parsing error:', e, text); setIsLoading(false); return }
     if (data.success) {
       setProjects(data.data)
       setOpenProjects(new Set(data.data.map((p: Project) => p.id)))
@@ -437,7 +450,7 @@ export default function ProjectsPage() {
     try {
       const res = await fetch(`/api/designs/${designId}`)
       const data = await res.json()
-      if (!data.success) { alert('불러오기 실패: ' + (data.error ?? '알 수 없는 오류')); return }
+      if (!data.success) { alert(`${text('Failed to load:', '불러오기 실패:')} ${data.error ?? text('Unknown error', '알 수 없는 오류')}`); return }
       const design = data.data
       // layoutJson이 있으면 전체 복원, 없으면 기본 inputs만으로 이동
       const lj = design.layout_json
@@ -471,17 +484,17 @@ export default function ProjectsPage() {
       }
       router.push('/design')
     } catch {
-      alert('네트워크 오류')
+      alert(text('Network error', '네트워크 오류'))
     }
   }
 
   const handleDeleteDesign = async (designId: string) => {
-    if (!confirm('이 설계안을 삭제하시겠습니까?')) return
+    if (!confirm(text('Delete this design?', '이 설계안을 삭제하시겠습니까?'))) return
     setDeletingId(designId)
     const res = await fetch(`/api/designs/${designId}`, { method: 'DELETE' })
     const data = await res.json()
     if (data.success) {
-      showToast('설계안이 삭제되었습니다')
+      showToast(text('Design deleted.', '설계안이 삭제되었습니다'))
       fetchProjects()
     }
     setDeletingId(null)
@@ -507,17 +520,20 @@ export default function ProjectsPage() {
             <LogoSub>Designer</LogoSub>
           </HeaderLogo>
           <Divider />
-          <PageLabel>내 프로젝트</PageLabel>
+          <PageLabel>{text('My projects', '내 프로젝트')}</PageLabel>
         </HeaderLeft>
-        <NewDesignButton href="/design">+ 새 설계 시작</NewDesignButton>
+        <HeaderRight>
+          <LanguageSwitcher />
+          <NewDesignButton href="/design">+ {text('New design', '새 설계 시작')}</NewDesignButton>
+        </HeaderRight>
       </PageHeader>
 
       <Content>
         <StatsGrid>
           {[
-            { label: '총 프로젝트', value: projects.length, icon: '📁' },
-            { label: '총 설계안', value: totalDesigns, icon: '📐' },
-            { label: '최근 수정', value: projects[0] ? formatDate(projects[0]?.updated_at) : '—', icon: '🕐' },
+            { label: text('Total projects', '총 프로젝트'), value: number(projects.length), icon: '📁' },
+            { label: text('Total designs', '총 설계안'), value: number(totalDesigns), icon: '📐' },
+            { label: text('Last updated', '최근 수정'), value: projects[0] ? formatProjectDate(projects[0]?.updated_at) : '—', icon: '🕐' },
           ].map((s) => (
             <StatCard key={s.label}>
               <StatTop>
@@ -536,9 +552,9 @@ export default function ProjectsPage() {
         ) : projects.length === 0 ? (
           <EmptyState>
             <EmptyIcon>🌱</EmptyIcon>
-            <EmptyTitle>아직 저장된 설계가 없습니다</EmptyTitle>
-            <EmptyDesc>설계 페이지에서 작업 후 저장해 보세요</EmptyDesc>
-            <EmptyButton href="/design">🌿 첫 설계 시작하기</EmptyButton>
+            <EmptyTitle>{text('No saved designs yet', '아직 저장된 설계가 없습니다')}</EmptyTitle>
+            <EmptyDesc>{text('Create a design, then save it to see it here.', '설계 페이지에서 작업 후 저장해 보세요')}</EmptyDesc>
+            <EmptyButton href="/design">🌿 {text('Create your first design', '첫 설계 시작하기')}</EmptyButton>
           </EmptyState>
         ) : (
           <ProjectList>
@@ -551,8 +567,8 @@ export default function ProjectsPage() {
                       <ProjectName>{project.name}</ProjectName>
                       <ProjectMeta>
                         {project.location && <MetaText>📍 {project.location}</MetaText>}
-                        <MetaText>설계안 {project.designs.length}개</MetaText>
-                        <MetaText>수정 {formatDate(project.updated_at)}</MetaText>
+                        <MetaText>{text('Designs', '설계안')} {number(project.designs.length)}</MetaText>
+                        <MetaText>{text('Updated', '수정')} {formatProjectDate(project.updated_at)}</MetaText>
                       </ProjectMeta>
                     </div>
                   </ProjectInfo>
@@ -561,7 +577,7 @@ export default function ProjectsPage() {
 
                 {openProjects.has(project.id) && (
                   project.designs.length === 0 ? (
-                    <EmptyDesigns>저장된 설계안이 없습니다</EmptyDesigns>
+                    <EmptyDesigns>{text('No saved designs', '저장된 설계안이 없습니다')}</EmptyDesigns>
                   ) : (
                     <DesignList>
                       {project.designs.map((design) => (
@@ -573,27 +589,27 @@ export default function ProjectsPage() {
                                 <DesignName>{design.name}</DesignName>
                                 <VersionBadge>v{design.version}</VersionBadge>
                                 <SafetyBadge $status={design.safety_status}>
-                                  {SAFETY_LABEL[(design.safety_status ?? 'GREEN') as 'GREEN'|'YELLOW'|'RED']}
+                                  {safetyLabel[(design.safety_status ?? 'GREEN') as 'GREEN'|'YELLOW'|'RED']}
                                 </SafetyBadge>
                               </DesignNameRow>
                               <DesignMetaRow>
                                 <DesignMetaText>
-                                  {design.width_m ?? 0}×{design.height_m ?? 0}m ({((design.area_m2 ?? (design.width_m ?? 0) * (design.height_m ?? 0)) || 0).toLocaleString()}㎡)
+                                  {number(design.width_m ?? 0)}×{number(design.height_m ?? 0)}m ({number((design.area_m2 ?? (design.width_m ?? 0) * (design.height_m ?? 0)) || 0)}㎡)
                                 </DesignMetaText>
-                                <EstimateText>{KRW(design.total_estimate)}</EstimateText>
+                                <EstimateText>{currency(design.total_estimate ?? 0, 'KRW')}</EstimateText>
                                 <DesignMetaText>
-                                  {formatDate(design.updated_at)}
+                                  {formatProjectDate(design.updated_at)}
                                 </DesignMetaText>
                               </DesignMetaRow>
                             </div>
                           </DesignLeft>
                           <ActionRow>
-                            <LoadButton onClick={() => handleLoadDesign(design.id)}>불러오기</LoadButton>
+                            <LoadButton onClick={() => handleLoadDesign(design.id)}>{text('Load', '불러오기')}</LoadButton>
                             <DeleteButton
                               onClick={() => handleDeleteDesign(design.id)}
                               disabled={deletingId === design.id}
                             >
-                              {deletingId === design.id ? '⌛' : '삭제'}
+                              {deletingId === design.id ? '⌛' : text('Delete', '삭제')}
                             </DeleteButton>
                           </ActionRow>
                         </DesignRow>

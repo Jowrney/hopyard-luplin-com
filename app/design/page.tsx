@@ -16,15 +16,17 @@ import UserMenu from '@/components/auth/UserMenu'
 import { CandidateTray } from '@/components/webmcp/CandidateTray'
 import { DesignWebMCP } from '@/components/webmcp/DesignWebMCP'
 import { createClient } from '@/lib/supabase/client'
+import { useLocale } from '@/components/i18n/LocaleProvider'
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher'
 
 // ── 동적 임포트 ───────────────────────────────────────
 const FarmCanvas2D = dynamic(
   () => import('@/components/canvas/FarmCanvas2D').then((m) => ({ default: m.FarmCanvas2D })),
-  { ssr: false, loading: () => <CanvasPlaceholder text="2D 캔버스 로딩 중…" /> }
+  { ssr: false, loading: () => <LocalizedCanvasPlaceholder view="2d" /> }
 )
 const FarmCanvas3D = dynamic(
   () => import('@/components/canvas/FarmCanvas3D').then((m) => ({ default: m.FarmCanvas3D })),
-  { ssr: false, loading: () => <CanvasPlaceholder text="3D 뷰어 로딩 중…" icon="🏗️" /> }
+  { ssr: false, loading: () => <LocalizedCanvasPlaceholder view="3d" /> }
 )
 
 type ViewMode = '2d' | '3d'
@@ -267,9 +269,22 @@ function CanvasPlaceholder({ text, icon = '🗺️' }: { text: string; icon?: st
   )
 }
 
+function LocalizedCanvasPlaceholder({ view }: { view: ViewMode }) {
+  const { text } = useLocale()
+  return (
+    <CanvasPlaceholder
+      text={view === '2d'
+        ? text('Loading 2D canvas…', '2D 캔버스 로딩 중…')
+        : text('Loading 3D viewer…', '3D 뷰어 로딩 중…')}
+      icon={view === '3d' ? '🏗️' : undefined}
+    />
+  )
+}
+
 export default function DesignPage() {
   const pathname = usePathname()
   const isDemo = pathname === '/design/demo'
+  const { text, number, date } = useLocale()
   const { quantities, inputs, recalculate } = useDesignStore()
   const { fetchPrices, isLoading: pricesLoading } = usePriceStore()
   const [viewMode, setViewMode] = useState<ViewMode>('2d')
@@ -283,16 +298,17 @@ export default function DesignPage() {
     if (!el) return
     try {
       const canvas = el.querySelector('canvas') as HTMLCanvasElement | null
-      if (!canvas) { alert('도면을 먼저 불러주세요.'); return }
+      if (!canvas) { alert(text('Load the drawing first.', '도면을 먼저 불러주세요.')); return }
 
-      const dateStr = new Date().toLocaleDateString('ko-KR')
-        .replace(/\. /g, '-').replace(/\.$/, '')
-      const filename = `hopeden-${viewMode === '2d' ? '평면도' : '투시도'}-${dateStr}.png`
+      const dateStr = date(new Date()).replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '')
+      const filename = `hopeden-${viewMode === '2d'
+        ? text('floor-plan', '평면도')
+        : text('perspective-view', '투시도')}-${dateStr}.png`
 
       const doSave = () => {
         const dataUrl = canvas.toDataURL('image/png')
         if (dataUrl === 'data:,') {
-          alert('도면이 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.')
+          alert(text('The drawing is still loading. Please try again shortly.', '도면이 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.'))
           return
         }
         const link = document.createElement('a')
@@ -307,9 +323,9 @@ export default function DesignPage() {
         requestAnimationFrame(() => {
           // id로 3D 캔버스 직접 접근
           const canvas3d = document.getElementById('hopeden-3d-canvas') as HTMLCanvasElement | null
-          if (!canvas3d) { alert('3D 도면을 먼저 로딩해주세요.'); return }
+          if (!canvas3d) { alert(text('Load the 3D drawing first.', '3D 도면을 먼저 로딩해주세요.')); return }
           const dataUrl = canvas3d.toDataURL('image/png')
-          if (!dataUrl || dataUrl === 'data:,') { alert('잠시 후 다시 시도해주세요.'); return }
+          if (!dataUrl || dataUrl === 'data:,') { alert(text('Please try again shortly.', '잠시 후 다시 시도해주세요.')); return }
           const link = document.createElement('a')
           link.download = filename
           link.href = dataUrl
@@ -321,10 +337,10 @@ export default function DesignPage() {
         doSave()
       }
     } catch (e) {
-      console.error('PNG 저장 실패:', e)
-      alert('PNG 저장에 실패했습니다.')
+      console.error(text('PNG save failed:', 'PNG 저장 실패:'), e)
+      alert(text('Failed to save the PNG.', 'PNG 저장에 실패했습니다.'))
     }
-  }, [viewMode])
+  }, [date, text, viewMode])
   const [userEmail, setUserEmail] = useState<string | undefined>()
 
   useEffect(() => {
@@ -354,15 +370,16 @@ export default function DesignPage() {
             <LogoSub>Designer</LogoSub>
           </HeaderLogo>
           <HeaderDivider />
-          <PageLabel>{isDemo ? 'WebMCP Challenge Demo' : '새 설계안'}</PageLabel>
+          <PageLabel>{isDemo ? text('WebMCP Challenge Demo', 'WebMCP 챌린지 데모') : text('New design', '새 설계안')}</PageLabel>
         </HeaderLeft>
 
         <HeaderRight>
+          <LanguageSwitcher />
           <DesignWebMCP />
           <SafetyBadge />
-          {pricesLoading && <PriceLoadingText>가격 로드 중…</PriceLoadingText>}
-          <OutlineButton onClick={() => setShowPDF(true)}>📄 견적서 PDF</OutlineButton>
-          {!isDemo && <PrimaryButton onClick={() => setShowSave(true)}>💾 설계 저장</PrimaryButton>}
+          {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
+          <OutlineButton onClick={() => setShowPDF(true)}>📄 {text('Estimate PDF', '견적서 PDF')}</OutlineButton>
+          {!isDemo && <PrimaryButton onClick={() => setShowSave(true)}>💾 {text('Save design', '설계 저장')}</PrimaryButton>}
           {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
         </HeaderRight>
       </PageHeader>
@@ -377,21 +394,21 @@ export default function DesignPage() {
             <ViewTabs>
               {(['2d', '3d'] as ViewMode[]).map((mode) => (
                 <ViewTab key={mode} $active={viewMode === mode} onClick={() => setViewMode(mode)}>
-                  {mode === '2d' ? '2D 평면도' : '3D 투시도'}
+                  {mode === '2d' ? text('2D plan', '2D 평면도') : text('3D perspective', '3D 투시도')}
                 </ViewTab>
               ))}
             </ViewTabs>
 
             {quantities && (
               <ChipsRow>
-                <Chip><span>🏗️</span><span>폴 {quantities.totalPoleCount}개</span></Chip>
-                <Chip><span>🔗</span><span>와이어 {quantities.totalWireM.toLocaleString('ko-KR')}m</span></Chip>
-                <Chip><span>🌱</span><span>{quantities.plantCount}주</span></Chip>
-                <Chip><span>📐</span><span>{(inputs.widthM * inputs.heightM).toLocaleString('ko-KR')}㎡</span></Chip>
+                <Chip><span>🏗️</span><span>{text(`${number(quantities.totalPoleCount)} poles`, `폴 ${number(quantities.totalPoleCount)}개`)}</span></Chip>
+                <Chip><span>🔗</span><span>{text(`${number(quantities.totalWireM)} m wire`, `와이어 ${number(quantities.totalWireM)}m`)}</span></Chip>
+                <Chip><span>🌱</span><span>{text(`${number(quantities.plantCount)} plants`, `${number(quantities.plantCount)}주`)}</span></Chip>
+                <Chip><span>📐</span><span>{text(`${number(inputs.widthM * inputs.heightM)} m²`, `${number(inputs.widthM * inputs.heightM)}㎡`)}</span></Chip>
               </ChipsRow>
             )}
 
-            <PngButton onClick={handlePngSave}>📥 PNG 저장</PngButton>
+            <PngButton onClick={handlePngSave}>📥 {text('Save PNG', 'PNG 저장')}</PngButton>
           </ViewToolbar>
 
           <CanvasArea ref={canvasAreaRef}>

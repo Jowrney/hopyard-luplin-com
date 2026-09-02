@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import styled, { keyframes, css } from 'styled-components'
 import { useDesignStore } from '@/stores/designStore'
+import { useLocale } from '@/components/i18n/LocaleProvider'
+import { getRegionalProfile } from '@/lib/design/regional-profiles'
 
 interface Project {
   id: string
@@ -64,12 +66,14 @@ const OverwriteSub = styled.span`font-size:0.7rem;color:#2D5A27;font-weight:400;
 const SaveButton = styled.button`width:100%;padding:0.875rem;background:#2D5A27;color:white;border:none;border-radius:0.875rem;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;&:hover{background:#234820;}&:disabled{opacity:0.5;cursor:not-allowed;}`
 
 export function SaveDesignModal({ onClose }: { onClose: () => void }) {
-  const { inputs, quantities, loads, estimate, currentDesignId, currentDesignName } = useDesignStore()
+  const { locale, text, number, currency } = useLocale()
+  const { profileId, inputs, quantities, loads, estimate, currentDesignId, currentDesignName } = useDesignStore()
+  const activeProfile = getRegionalProfile(profileId)
 
   const [projects, setProjects]            = useState<Project[]>([])
   const [isLoadingProjects, setIsLoading]  = useState(true)
   const [selectedProjectId, setSelectedPId]= useState('')
-  const [designName, setDesignName]        = useState('새 설계안')
+  const [designName, setDesignName]        = useState(() => text('New design', '새 설계안'))
   const [isCreatingProject, setIsCreating] = useState(false)
   const [newProjectName, setNewProjName]   = useState('')
   const [newProjectLocation, setNewProjLoc]= useState('')
@@ -78,6 +82,12 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
   const [error, setError]                  = useState('')
   // 덮어쓰기 모드: 불러온 설계안이 있으면 기본값 true
   const [isOverwrite, setIsOverwrite]      = useState(!!currentDesignId)
+
+  useEffect(() => {
+    setDesignName(current => current === 'New design' || current === '새 설계안'
+      ? text('New design', '새 설계안')
+      : current)
+  }, [locale, text])
 
   useEffect(() => {
     fetch('/api/projects')
@@ -118,7 +128,7 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
         })
       } else {
         // 새로 저장 — POST
-        if (!selectedProjectId || !designName.trim()) { setError('프로젝트와 설계명을 입력해주세요'); setIsSaving(false); return }
+        if (!selectedProjectId || !designName.trim()) { setError(text('Enter a project and design name.', '프로젝트와 설계명을 입력해주세요')); setIsSaving(false); return }
         res = await fetch('/api/designs', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ projectId: selectedProjectId, name: designName, inputs, quantities: quantities ?? null, loads: loads ?? null, estimate: estimate ?? null }),
@@ -126,8 +136,8 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
       }
       const data = await res.json()
       if (data.success) { setDone(true); setTimeout(onClose, 1500) }
-      else setError(data.error ?? '저장 실패')
-    } catch { setError('네트워크 오류') }
+      else setError(data.error ?? text('Save failed.', '저장 실패'))
+    } catch { setError(text('Network error.', '네트워크 오류')) }
     finally { setIsSaving(false) }
   }
 
@@ -136,10 +146,10 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
       <ModalBox>
         <Header>
           <HeaderText>
-            <HeaderTitle>💾 설계 저장</HeaderTitle>
-            <HeaderSub>프로젝트를 선택하고 설계안을 저장하세요</HeaderSub>
+            <HeaderTitle>💾 {text('Save design', '설계 저장')}</HeaderTitle>
+            <HeaderSub>{text('Choose a project and save this design.', '프로젝트를 선택하고 설계안을 저장하세요')}</HeaderSub>
           </HeaderText>
-          <CloseBtn onClick={onClose}>✕</CloseBtn>
+          <CloseBtn onClick={onClose} aria-label={text('Close', '닫기')}>✕</CloseBtn>
         </Header>
         <Body>
           {error && <ErrorBox>⚠️ {error}</ErrorBox>}
@@ -148,11 +158,11 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
           {currentDesignId && (
             <OverwriteToggle>
               <OverwriteBtn $active={isOverwrite} onClick={() => setIsOverwrite(true)}>
-                ♻️ 덮어쓰기
-                {isOverwrite && <OverwriteSub>{currentDesignName ?? '현재 설계안'}</OverwriteSub>}
+                ♻️ {text('Overwrite', '덮어쓰기')}
+                {isOverwrite && <OverwriteSub>{currentDesignName ?? text('Current design', '현재 설계안')}</OverwriteSub>}
               </OverwriteBtn>
               <OverwriteBtn $active={!isOverwrite} onClick={() => setIsOverwrite(false)}>
-                ➕ 새로 저장
+                ➕ {text('Save as new', '새로 저장')}
               </OverwriteBtn>
             </OverwriteToggle>
           )}
@@ -160,29 +170,31 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
           {done ? (
             <DoneBox>
               <DoneIcon>✅</DoneIcon>
-              <DoneTitle>저장 완료!</DoneTitle>
-              <DoneSub>프로젝트에 설계가 저장되었습니다</DoneSub>
+              <DoneTitle>{text('Saved!', '저장 완료!')}</DoneTitle>
+              <DoneSub>{text('The design was saved to the project.', '프로젝트에 설계가 저장되었습니다')}</DoneSub>
             </DoneBox>
           ) : (
             <>
               {/* 새로 저장 모드에서만 프로젝트/이름 입력 */}
               {!isOverwrite && <div>
                 <LabelRow>
-                  <FieldLabel style={{margin:0}}>프로젝트 선택</FieldLabel>
+                  <FieldLabel style={{margin:0}}>{text('Choose project', '프로젝트 선택')}</FieldLabel>
                   <ToggleBtn onClick={() => setIsCreating(v => !v)}>
-                    {isCreatingProject ? '← 기존 프로젝트 선택' : '+ 새 프로젝트 만들기'}
+                    {isCreatingProject
+                      ? text('← Choose existing project', '← 기존 프로젝트 선택')
+                      : text('+ Create new project', '+ 새 프로젝트 만들기')}
                   </ToggleBtn>
                 </LabelRow>
                 {isCreatingProject ? (
                   <NewProjBox>
-                    <TextInput placeholder="프로젝트명 (예: 안동 홉 농장 A구역)" value={newProjectName} onChange={e=>setNewProjName(e.target.value)} />
-                    <TextInput placeholder="위치 (선택, 예: 경북 안동시)" value={newProjectLocation} onChange={e=>setNewProjLoc(e.target.value)} />
-                    <CreateBtn onClick={handleCreateProject} disabled={!newProjectName.trim()}>프로젝트 생성</CreateBtn>
+                    <TextInput placeholder={text('Project name (e.g. Yakima Hopyard, Block A)', '프로젝트명 (예: 안동 홉 농장 A구역)')} value={newProjectName} onChange={e=>setNewProjName(e.target.value)} />
+                    <TextInput placeholder={text('Location (optional, e.g. Yakima, WA)', '위치 (선택, 예: 경북 안동시)')} value={newProjectLocation} onChange={e=>setNewProjLoc(e.target.value)} />
+                    <CreateBtn onClick={handleCreateProject} disabled={!newProjectName.trim()}>{text('Create project', '프로젝트 생성')}</CreateBtn>
                   </NewProjBox>
                 ) : isLoadingProjects ? (
                   <Skeleton />
                 ) : projects.length === 0 ? (
-                  <EmptyProj>프로젝트가 없습니다. 새 프로젝트를 만들어주세요.</EmptyProj>
+                  <EmptyProj>{text('No projects yet. Create a new project.', '프로젝트가 없습니다. 새 프로젝트를 만들어주세요.')}</EmptyProj>
                 ) : (
                   <ProjectList>
                     {projects.map(p => (
@@ -193,7 +205,7 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
                             {p.location && <ProjLoc>📍 {p.location}</ProjLoc>}
                           </div>
                           <div style={{textAlign:'right'}}>
-                            <ProjCount>{p.designs?.length ?? 0}개 설계</ProjCount>
+                            <ProjCount>{text(`${number(p.designs?.length ?? 0)} designs`, `설계 ${number(p.designs?.length ?? 0)}개`)}</ProjCount>
                             {selectedProjectId===p.id && <ProjCheck>✓</ProjCheck>}
                           </div>
                         </ProjRow>
@@ -204,18 +216,18 @@ export function SaveDesignModal({ onClose }: { onClose: () => void }) {
               </div>}
 
               {!isOverwrite && <div>
-                <FieldLabel>설계안 이름</FieldLabel>
-                <TextInput value={designName} onChange={e=>setDesignName(e.target.value)} placeholder="예: A안 - 강관 3m 간격" />
+                <FieldLabel>{text('Design name', '설계안 이름')}</FieldLabel>
+                <TextInput value={designName} onChange={e=>setDesignName(e.target.value)} placeholder={text('e.g. Option A — steel poles at 3 m', '예: A안 - 강관 3m 간격')} />
               </div>}
 
               <SummaryGrid>
-                <div><SumLabel>면적</SumLabel><SumValue>{(inputs.widthM * inputs.heightM).toLocaleString()}㎡</SumValue></div>
-                <div><SumLabel>폴 수량</SumLabel><SumValue>{quantities?.totalPoleCount ?? 0}개</SumValue></div>
-                <div><SumLabel>총 견적</SumLabel><SumValue $green>₩{(estimate?.total ?? 0).toLocaleString('ko-KR')}</SumValue></div>
+                <div><SumLabel>{text('Area', '면적')}</SumLabel><SumValue>{number(inputs.widthM * inputs.heightM)} ㎡</SumValue></div>
+                <div><SumLabel>{text('Poles', '폴 수량')}</SumLabel><SumValue>{text(`${number(quantities?.totalPoleCount ?? 0)} each`, `${number(quantities?.totalPoleCount ?? 0)}개`)}</SumValue></div>
+                <div><SumLabel>{text('Estimate', '총 견적')}</SumLabel><SumValue $green>{currency(estimate?.total ?? 0, activeProfile.currency)}</SumValue></div>
               </SummaryGrid>
 
               <SaveButton onClick={handleSave} disabled={isSaving || !selectedProjectId || !designName.trim()}>
-                {isSaving ? '⌛' : '💾'}{isSaving ? '저장 중…' : '설계 저장'}
+                {isSaving ? '⌛' : '💾'}{isSaving ? text('Saving…', '저장 중…') : text('Save design', '설계 저장')}
               </SaveButton>
             </>
           )}

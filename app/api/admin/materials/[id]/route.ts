@@ -11,14 +11,14 @@ export async function PUT(
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ success: false, error: '로그인 필요' }, { status: 401 })
+    if (!user) return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
 
     const body = await req.json()
     const unitPrice = Number(body.unitPrice)
     const reason = body.reason ?? ''
 
     if (!unitPrice || unitPrice < 1) {
-      return NextResponse.json({ success: false, error: '단가는 1원 이상이어야 합니다' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Unit price must be at least 1 KRW' }, { status: 400 })
     }
 
     // 기존 단가 조회
@@ -29,7 +29,7 @@ export async function PUT(
       .single()
 
     if (fetchError || !existing) {
-      return NextResponse.json({ success: false, error: '자재를 찾을 수 없습니다' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Material not found' }, { status: 404 })
     }
 
     // 가격 이력 저장
@@ -71,7 +71,7 @@ export async function DELETE(
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ success: false, error: '로그인 필요' }, { status: 401 })
+    if (!user) return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
 
     const { error } = await supabase
       .from('materials')

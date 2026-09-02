@@ -6,6 +6,7 @@ import styled, { keyframes, css } from 'styled-components'
 import type { SafetyStatus } from '@/types'
 import { useDesignStore } from '@/stores/designStore'
 import { WIRE_DIAMETER_TO_CODE } from '@/lib/calculations/loads'
+import { useLocale } from '@/components/i18n/LocaleProvider'
 
 const pulse = keyframes`0%,100%{opacity:1}50%{opacity:0.4}`
 
@@ -76,12 +77,15 @@ const PopFooter = styled.div<{$status:SafetyStatus}>`
     ${({$status})=>$status==='RED'    && `color:#dc2626;background:#fef2f2;`}
 `
 
-const STATUS_LABEL: Record<SafetyStatus,string> = {
-  GREEN:'구조 안전', YELLOW:'주의 필요', RED:'위험 — 와이어 보강 필요',
+const STATUS_LABEL: Record<SafetyStatus, { en: string; ko: string }> = {
+  GREEN:  { en: 'Structurally safe', ko: '구조 안전' },
+  YELLOW: { en: 'Caution required', ko: '주의 필요' },
+  RED:    { en: 'Danger — reinforce wire', ko: '위험 — 와이어 보강 필요' },
 }
 
 // props 없이 스토어 직접 구독 — 와이어 교체 즉시 반영
 export function SafetyBadge() {
+  const { text, number } = useLocale()
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -119,53 +123,53 @@ export function SafetyBadge() {
     <Wrapper ref={wrapperRef}>
       <Badge $status={safetyStatus} onClick={()=>setOpen(v=>!v)}>
         <Dot $status={safetyStatus}/>
-        {STATUS_LABEL[safetyStatus]}
+        {text(STATUS_LABEL[safetyStatus].en, STATUS_LABEL[safetyStatus].ko)}
         <HintIcon>ⓘ</HintIcon>
       </Badge>
 
       {open && (
         <Popover>
           <PopHeader $status={safetyStatus}>
-            <PopTitle $status={safetyStatus}>{STATUS_LABEL[safetyStatus]}</PopTitle>
+            <PopTitle $status={safetyStatus}>{text(STATUS_LABEL[safetyStatus].en, STATUS_LABEL[safetyStatus].ko)}</PopTitle>
           </PopHeader>
           <PopBody>
-            <Row><Label>홉 생체중 하중</Label><Value>{hopLoadKN.toFixed(2)} kN</Value></Row>
-            <Row><Label>풍압 하중</Label><Value>{windLoadKN.toFixed(2)} kN</Value></Row>
+            <Row><Label>{text('Hop biomass load', '홉 생체중 하중')}</Label><Value>{number(hopLoadKN)} kN</Value></Row>
+            <Row><Label>{text('Wind load', '풍압 하중')}</Label><Value>{number(windLoadKN)} kN</Value></Row>
             <Divider/>
-            <Row><Label>설계 인장력 (×1.5)</Label><Value $bold>{designTensionKN.toFixed(2)} kN</Value></Row>
-            <Row><Label>현재 와이어 허용 인장력</Label><Value>{currentAllowableTensionKN.toFixed(2)} kN</Value></Row>
+            <Row><Label>{text('Design tension (×1.5)', '설계 인장력 (×1.5)')}</Label><Value $bold>{number(designTensionKN)} kN</Value></Row>
+            <Row><Label>{text('Current wire allowable tension', '현재 와이어 허용 인장력')}</Label><Value>{number(currentAllowableTensionKN)} kN</Value></Row>
             <BarWrapper>
               <BarLabel>
-                <Label>하중 사용률</Label>
+                <Label>{text('Load utilization', '하중 사용률')}</Label>
                 <Value $bold $color={usagePct>=100?'#dc2626':usagePct>=90?'#b45309':'#15803d'}>
-                  {usagePct.toFixed(1)}%
+                  {number(Math.round(usagePct * 10) / 10)}%
                 </Value>
               </BarLabel>
               <BarTrack><BarFill $pct={Math.min(usagePct,100)} $status={safetyStatus}/></BarTrack>
             </BarWrapper>
             {shortage !== null && (
               <Row>
-                <Label>⚠️ 인장력 부족량</Label>
-                <Value $bold $color="#dc2626">+{shortage.toFixed(2)} kN 초과</Value>
+                <Label>⚠️ {text('Tension shortfall', '인장력 부족량')}</Label>
+                <Value $bold $color="#dc2626">+{number(shortage)} kN {text('over', '초과')}</Value>
               </Row>
             )}
             <Row>
-              <Label>권장 와이어</Label>
-              <Value $bold $color="#2D5A27">Φ{recommendedWireDiameterMM}mm 이상</Value>
+              <Label>{text('Recommended wire', '권장 와이어')}</Label>
+              <Value $bold $color="#2D5A27">Φ{number(recommendedWireDiameterMM)} mm {text('or larger', '이상')}</Value>
             </Row>
             {canUpgrade && (
               <>
                 <Divider/>
                 <UpgradeBtn onClick={handleUpgrade}>
-                  ⚡ Φ{recommendedWireDiameterMM}mm으로 즉시 교체
+                  ⚡ {text(`Upgrade now to Φ${number(recommendedWireDiameterMM)} mm`, `Φ${number(recommendedWireDiameterMM)} mm으로 즉시 교체`)}
                 </UpgradeBtn>
               </>
             )}
           </PopBody>
           <PopFooter $status={safetyStatus}>
-            {safetyStatus==='GREEN'  && '✅ 설계 하중이 허용 범위 이내입니다.'}
-            {safetyStatus==='YELLOW' && '⚠️ 와이어 보강을 권장합니다.'}
-            {safetyStatus==='RED'    && '🚨 현재 와이어로는 하중을 버티지 못합니다.'}
+            {safetyStatus==='GREEN'  && text('✅ The design load is within the allowable range.', '✅ 설계 하중이 허용 범위 이내입니다.')}
+            {safetyStatus==='YELLOW' && text('⚠️ Wire reinforcement is recommended.', '⚠️ 와이어 보강을 권장합니다.')}
+            {safetyStatus==='RED'    && text('🚨 The current wire cannot support the design load.', '🚨 현재 와이어로는 하중을 버티지 못합니다.')}
           </PopFooter>
         </Popover>
       )}

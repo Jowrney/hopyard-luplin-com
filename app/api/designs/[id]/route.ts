@@ -11,7 +11,7 @@ export async function GET(
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ success: false, error: '로그인 필요' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
     const { data, error } = await supabase
@@ -22,7 +22,7 @@ export async function GET(
       .single()
 
     if (error || !data) {
-      return NextResponse.json({ success: false, error: '설계를 찾을 수 없습니다' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Design not found' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true, data })
@@ -40,7 +40,7 @@ export async function PUT(
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ success: false, error: '로그인 필요' }, { status: 401 })
+    if (!user) return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
 
     // 소유권 확인
     const { data: existing } = await supabase
@@ -50,7 +50,7 @@ export async function PUT(
       .eq('projects.user_id', user.id)
       .single()
 
-    if (!existing) return NextResponse.json({ success: false, error: '설계를 찾을 수 없습니다' }, { status: 404 })
+    if (!existing) return NextResponse.json({ success: false, error: 'Design not found' }, { status: 404 })
 
     const { inputs, quantities, loads, estimate } = await req.json()
 
@@ -98,7 +98,7 @@ export async function DELETE(
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ success: false, error: '로그인 필요' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
     // 소유권 확인
@@ -110,7 +110,7 @@ export async function DELETE(
       .single()
 
     if (!design) {
-      return NextResponse.json({ success: false, error: '설계를 찾을 수 없습니다' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Design not found' }, { status: 404 })
     }
 
     const { error } = await supabase.from('designs').delete().eq('id', id)
