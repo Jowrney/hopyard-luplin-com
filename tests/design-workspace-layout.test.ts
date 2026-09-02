@@ -12,8 +12,11 @@ test('design workspace exposes independent input and review panel toggles', () =
   assert.match(source, /PanelBackdrop/)
 })
 
-test('desktop header centers the logo between icon-only panel toggles', () => {
+test('mobile centers the logo while desktop aligns it left', () => {
   assert.match(source, /grid-template-columns:\s*1fr auto 1fr/)
+  assert.match(source, /@media \(min-width: 1200px\)/)
+  assert.match(source, /grid-template-columns:\s*auto auto 1fr/)
+  assert.match(source, /grid-column:\s*1/)
   assert.match(source, /<HeaderCenter>/)
   assert.match(source, /aria-label={text\('Open design inputs'/)
   assert.match(source, /aria-label={text\('Open review & estimate'/)
@@ -26,13 +29,17 @@ test('desktop header keeps language, safety, and estimate actions on top', () =>
   assert.match(header, /<LanguageSwitcher/)
   assert.match(header, /<SafetyBadge/)
   assert.match(header, /Estimate PDF/)
+  assert.match(header, /<DesignWebMCP/)
+  assert.match(header, /Save design/)
+  assert.match(header, /<UserMenu/)
 })
 
-test('WebMCP and remaining details live in the review panel', () => {
+test('mobile-only utilities remain available in the review panel', () => {
   const rightPanelStart = source.indexOf('<RightPanel')
   assert.ok(rightPanelStart >= 0)
   const rightPanel = source.slice(rightPanelStart, source.indexOf('</RightPanel>', rightPanelStart))
-  assert.match(rightPanel, /<DesignWebMCP/)
+  assert.match(rightPanel, /<MobileUtilities>[\s\S]*<DesignWebMCP/)
+  assert.match(rightPanel, /<MobileUtilities>[\s\S]*<UserMenu/)
   assert.match(rightPanel, /<EstimatePanel/)
 })
 

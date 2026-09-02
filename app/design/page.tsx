@@ -71,12 +71,19 @@ const PageHeader = styled.header`
     @media (max-width: 1199px) {
         padding: 0.55rem 0.65rem;
     }
+    @media (min-width: 1200px) {
+        grid-template-columns: auto auto 1fr;
+    }
 `
 
 const HeaderLeft = styled.div`
     display: flex;
     align-items: center;
     min-width: 0;
+    @media (min-width: 1200px) {
+        grid-column: 2;
+        grid-row: 1;
+    }
 `
 
 const HeaderCenter = styled.div`
@@ -84,6 +91,11 @@ const HeaderCenter = styled.div`
     align-items: center;
     justify-content: center;
     min-width: 0;
+    @media (min-width: 1200px) {
+        grid-column: 1;
+        grid-row: 1;
+        justify-content: flex-start;
+    }
 `
 
 const HeaderLogo = styled(Link)`
@@ -100,6 +112,10 @@ const HeaderRight = styled.div`
     justify-content: flex-end;
     gap: 0.5rem;
     flex-shrink: 0;
+    @media (min-width: 1200px) {
+        grid-column: 3;
+        grid-row: 1;
+    }
 `
 
 const PanelToggle = styled.button<{ $active:boolean }>`
@@ -140,8 +156,9 @@ const PanelClose = styled.button`
     color:#475569;cursor:pointer;display:grid;place-items:center;
 `
 const RightUtilities = styled.div`
-    padding:0.7rem;border-bottom:1px solid #E8E4DC;display:flex;flex-wrap:wrap;gap:0.45rem;
+    padding:0.7rem;border-bottom:1px solid #E8E4DC;display:none;flex-wrap:wrap;gap:0.45rem;
     align-items:center;background:white;
+    @media (max-width: 1199px){display:flex;}
 `
 
 const PriceLoadingText = styled.span`
@@ -535,6 +552,10 @@ export default function DesignPage() {
             <LanguageSwitcher />
             <SafetyBadge />
             <OutlineButton onClick={openPDF}><FilePdf size={18} weight="bold" />{text('Estimate PDF', '견적서')}</OutlineButton>
+            <DesignWebMCP />
+            {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
+            {!isDemo && <PrimaryButton onClick={openSave}><FloppyDisk size={18} weight="bold" />{text('Save design', '설계 저장')}</PrimaryButton>}
+            {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
           </DesktopActions>
           <PanelToggle
             type="button"
@@ -602,15 +623,15 @@ export default function DesignPage() {
             <PanelClose type="button" onClick={() => setRightPanelOpen(false)} aria-label={text('Close review panel', '검토 패널 닫기')}><X size={17} weight="bold" /></PanelClose>
           </PanelHeader>
           <RightUtilities>
-            <DesignWebMCP />
             <MobileUtilities>
+              <DesignWebMCP />
               <LanguageSwitcher />
               <SafetyBadge />
               <OutlineButton onClick={openPDF}><FilePdf size={18} weight="bold" />{text('Estimate PDF', '견적서')}</OutlineButton>
+              {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
+              {!isDemo && <PrimaryButton onClick={openSave}><FloppyDisk size={18} weight="bold" />{text('Save design', '설계 저장')}</PrimaryButton>}
+              {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
             </MobileUtilities>
-            {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
-            {!isDemo && <PrimaryButton onClick={openSave}><FloppyDisk size={18} weight="bold" />{text('Save design', '설계 저장')}</PrimaryButton>}
-            {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}
           </RightUtilities>
           <EstimatePanel />
         </RightPanel>

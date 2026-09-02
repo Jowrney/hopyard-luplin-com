@@ -74,6 +74,8 @@ const baseState = () => evaluate(`(() => {
     headerRight: reviewButton?.getBoundingClientRect().right ?? 0,
     inputButtonLeft: inputButton?.getBoundingClientRect().left ?? -1,
     reviewButtonRight: reviewButton?.getBoundingClientRect().right ?? -1,
+    logoLeft: logo?.getBoundingClientRect().left ?? -1,
+    logoRight: logo?.getBoundingClientRect().right ?? -1,
     logoCenter: logo ? logo.getBoundingClientRect().left + logo.getBoundingClientRect().width / 2 : -1,
     topActions: headerText.includes('EN') && (headerText.includes('Structurally safe') || headerText.includes('Caution') || headerText.includes('Danger')) && headerText.includes('Estimate'),
     viewTabs: tabs.filter((label) => label === '2D' || label === '3D'),
@@ -130,7 +132,7 @@ const report = { desktop, desktopScrollOwners, tabletClosed, tabletLeft, tabletR
 console.log(JSON.stringify(report, null, 2))
 ws.close()
 const valid =
-  desktop.scrollWidth === 1440 && desktop.headerRight <= 1440 && desktop.inputExpanded === 'true' && desktop.reviewExpanded === 'true' && desktop.canvasWidth >= 500 && Math.abs(desktop.logoCenter - 720) <= 1 && desktop.inputButtonLeft <= 25 && desktop.reviewButtonRight >= 1415 && desktop.topActions && desktop.viewTabs.length === 2 && desktop.metricsBelowActions && desktopScrollOwners.left === 1 && desktopScrollOwners.right === 1 &&
+  desktop.scrollWidth === 1440 && desktop.headerRight <= 1440 && desktop.inputExpanded === 'true' && desktop.reviewExpanded === 'true' && desktop.canvasWidth >= 500 && desktop.logoLeft <= 25 && desktop.inputButtonLeft >= desktop.logoRight && desktop.reviewButtonRight >= 1415 && desktop.topActions && desktop.viewTabs.length === 2 && desktop.metricsBelowActions && desktopScrollOwners.left === 1 && desktopScrollOwners.right === 1 &&
   tabletClosed.scrollWidth === 1024 && tabletClosed.inputExpanded === 'false' && tabletClosed.reviewExpanded === 'false' && tabletClosed.headerRight <= 1024 && Math.abs(tabletClosed.logoCenter - 512) <= 1 && !tabletClosed.topActions && tabletClosed.viewTabs.length === 2 &&
   tabletLeft.expanded === 'true' && tabletLeft.left >= 0 && tabletLeft.right <= 1024 &&
   tabletRight.expanded === 'true' && tabletRight.left >= 0 && tabletRight.right <= 1024 && tabletRight.utilities && tabletScrollOwners.right === 1 &&
