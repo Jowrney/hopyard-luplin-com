@@ -15,5 +15,6 @@ test('training labels describe the rendered I and Y shapes while preserving wire
   assert.match(canvas, /Y-shaped training/)
   assert.match(contracts, /Y-shaped split training/)
   assert.match(video, /Korean I-shaped training/)
+  assert.match(video, /Korean eye-shaped training/)
   assert.doesNotMatch(video, /Korean I-training/)
 })
