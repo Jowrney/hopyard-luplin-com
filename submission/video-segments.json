@@ -66,12 +66,12 @@
   {
     "scene": "approval",
     "en": "During preview, Apply and Discard are registered dynamically, increasing the tool count from five to seven. Final control remains with the farmer.",
-    "ko": "미리보기 중 Apply와 Discard가 동적으로 등록되어 도구가 5개에서 7개로 늘어납니다. 최종 결정권은 농가에 있습니다."
+    "ko": "미리보기 중 적용과 취소 도구가 동적으로 등록되어 도구가 5개에서 7개로 늘어납니다. 최종 결정권은 농가에 있습니다."
   },
   {
     "scene": "integrity",
     "en": "Here the farmer chooses Discard. The agent restores the previous design and returns to five tools, without inventing prices or engineering approval.",
-    "ko": "농가가 Discard를 선택합니다. 에이전트는 이전 설계와 도구 5개를 복원하며 가격이나 안전 승인을 만들어내지 않습니다."
+    "ko": "농가가 취소를 선택합니다. 에이전트는 이전 설계와 도구 5개를 복원하며 가격이나 안전 승인을 만들어내지 않습니다."
   },
   {
     "scene": "impact",
