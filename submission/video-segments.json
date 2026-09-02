@@ -1,68 +1,86 @@
 [
   {
     "scene": "landing",
-    "en": "Meet Hopyard Designer, a shared planning workspace for hop farmers, installers, and their AI agents."
+    "en": "Meet Hopyard Designer, a shared planning workspace for hop farmers, installers, and their AI agents.",
+    "ko": "홉 농가, 시공업체와 AI 에이전트가 함께 쓰는 설계 공간, Hopyard Designer입니다."
   },
   {
     "scene": "problem",
-    "en": "A hopyard plan connects planting density, poles, wire, anchors, wind load, and cost. One change affects the whole system."
+    "en": "A hopyard plan connects planting density, poles, wire, anchors, wind load, and cost. One change affects the whole system.",
+    "ko": "홉 농장은 식재, 지주, 와이어, 앵커, 풍하중과 비용이 연결됩니다. 하나를 바꾸면 전체가 달라집니다."
   },
   {
     "scene": "human-workflow",
-    "en": "The original web app already calculated seed cost, facility quantities, structural load, and live estimates from a human-operated design form."
+    "en": "The original web app already calculated seed cost, facility quantities, structural load, and live estimates from a human-operated design form.",
+    "ko": "기존 웹앱은 사람이 입력한 설계를 바탕으로 종자 비용, 시설 수량, 구조 하중과 실시간 견적을 계산합니다."
   },
   {
     "scene": "two-d",
-    "en": "Every input updates a construction-oriented two-dimensional plan, including poles, anchors, main wire, training wire, and hop positions."
+    "en": "Every input updates a construction-oriented two-dimensional plan, including poles, anchors, main wire, training wire, and hop positions.",
+    "ko": "모든 입력은 지주, 앵커, 메인 와이어, 유인 와이어와 홉 위치를 포함한 시공 중심의 2차원 도면에 즉시 반영됩니다."
   },
   {
     "scene": "three-d",
-    "en": "The same design becomes an interactive three-dimensional farm. We can orbit the complete structure and inspect the system from any direction."
+    "en": "The same design becomes an interactive three-dimensional farm. We can orbit the complete structure and inspect the system from any direction.",
+    "ko": "같은 설계를 상호작용 가능한 3차원 농장으로 확인합니다. 전체 구조를 회전하며 모든 방향에서 검토할 수 있습니다."
   },
   {
     "scene": "asset-closeups",
-    "en": "Zooming in reveals the reusable Blender assets: galvanized poles, perimeter anchors, wire hardware, and hops trained along the support lines. Then we zoom back out to the full farm."
+    "en": "Zooming in reveals the reusable Blender assets: galvanized poles, perimeter anchors, wire hardware, and hops trained along the support lines. Then we zoom back out to the full farm.",
+    "ko": "확대하면 재사용 가능한 Blender 자산인 아연도금 지주, 외곽 앵커, 와이어 하드웨어와 유인선을 따라 자라는 홉이 보입니다. 다시 전체 농장으로 축소합니다."
   },
   {
     "scene": "webmcp-tools",
-    "en": "For the WebMCP Challenge, we added five structured site tools instead of making an agent guess how to click the interface."
+    "en": "For the WebMCP Challenge, we added five structured site tools instead of making an agent guess how to click the interface.",
+    "ko": "WebMCP Challenge를 위해 에이전트가 화면 클릭을 추측하는 대신 사용할 수 있는 구조화된 사이트 도구 5개를 추가했습니다."
   },
   {
     "scene": "read-context",
-    "en": "The agent first reads the active design, quantities, pricing status, safety status, regional profiles, and current collaboration state."
+    "en": "The agent first reads the active design, quantities, pricing status, safety status, regional profiles, and current collaboration state.",
+    "ko": "에이전트는 먼저 현재 설계, 수량, 가격 상태, 안전 상태, 지역 프로파일과 협업 상태를 읽습니다."
   },
   {
     "scene": "simulate",
     "en": "It then creates two non-destructive alternatives: a Korean I-shaped training layout and a sourced North American eighteen-foot Y-trained reference system.",
-    "spoken": "It then creates two non-destructive alternatives: a Korean eye-shaped training layout and a sourced North American eighteen-foot Y-trained reference system."
+    "spoken": "It then creates two non-destructive alternatives: a Korean eye-shaped training layout and a sourced North American eighteen-foot Y-trained reference system.",
+    "ko": "현재 설계를 바꾸지 않고 두 대안을 만듭니다. 한국형 I자형 유인안과 출처가 있는 북미 18피트 Y자형 유인 참고안입니다.",
+    "koSpoken": "현재 설계를 바꾸지 않고 두 대안을 만듭니다. 한국형 아이자형 유인안과 출처가 있는 북미 십팔 피트 와이자형 유인 참고안입니다."
   },
   {
     "scene": "compare",
-    "en": "Both candidates appear in the same visual workspace with differences in poles, wire, plant count, estimate, and engineering status."
+    "en": "Both candidates appear in the same visual workspace with differences in poles, wire, plant count, estimate, and engineering status.",
+    "ko": "두 후보는 같은 작업공간에서 지주, 와이어, 식재 수, 견적과 엔지니어링 상태 차이와 함께 표시됩니다."
   },
   {
     "scene": "human-choice",
     "en": "The agent presents both options and waits. The farmer chooses the Korean I-shaped training alternative for visual preview.",
-    "spoken": "The agent presents both options and waits. The farmer chooses the Korean eye-shaped training alternative for visual preview."
+    "spoken": "The agent presents both options and waits. The farmer chooses the Korean eye-shaped training alternative for visual preview.",
+    "ko": "에이전트가 두 안을 제시하고 기다립니다. 농가가 시각 검토할 한국형 I자형 유인안을 선택합니다.",
+    "koSpoken": "에이전트가 두 안을 제시하고 기다립니다. 농가가 시각 검토할 한국형 아이자형 유인안을 선택합니다."
   },
   {
     "scene": "preview",
-    "en": "The selected candidate updates the shared two-dimensional and three-dimensional views while preserving an exact snapshot of the original design."
+    "en": "The selected candidate updates the shared two-dimensional and three-dimensional views while preserving an exact snapshot of the original design.",
+    "ko": "선택된 후보가 공유 2차원과 3차원 화면에 반영되며 원래 설계의 정확한 스냅샷은 보존됩니다."
   },
   {
     "scene": "approval",
-    "en": "During preview, Apply and Discard are registered dynamically, increasing the tool count from five to seven. Final control remains with the farmer."
+    "en": "During preview, Apply and Discard are registered dynamically, increasing the tool count from five to seven. Final control remains with the farmer.",
+    "ko": "미리보기 중 Apply와 Discard가 동적으로 등록되어 도구가 5개에서 7개로 늘어납니다. 최종 결정권은 농가에 있습니다."
   },
   {
     "scene": "integrity",
-    "en": "Here the farmer chooses Discard. The agent restores the previous design and returns to five tools, without inventing prices or engineering approval."
+    "en": "Here the farmer chooses Discard. The agent restores the previous design and returns to five tools, without inventing prices or engineering approval.",
+    "ko": "농가가 Discard를 선택합니다. 에이전트는 이전 설계와 도구 5개를 복원하며 가격이나 안전 승인을 만들어내지 않습니다."
   },
   {
     "scene": "impact",
-    "en": "Hopyard Designer turns a complex agricultural estimate into a transparent human-agent design conversation, without taking final decisions away from the farmer."
+    "en": "Hopyard Designer turns a complex agricultural estimate into a transparent human-agent design conversation, without taking final decisions away from the farmer.",
+    "ko": "Hopyard Designer는 복잡한 농업 견적을 투명한 사람과 에이전트의 설계 대화로 바꾸면서 최종 결정권은 농가에 남겨둡니다."
   },
   {
     "scene": "closing",
-    "en": "Plan precisely, compare safely, and build with confidence. This is Hopyard Designer by HOPEDEN, powered by WebMCP."
+    "en": "Plan precisely, compare safely, and build with confidence. This is Hopyard Designer by HOPEDEN, powered by WebMCP.",
+    "ko": "정확하게 설계하고 안전하게 비교하세요. WebMCP 기반, HOPEDEN의 Hopyard Designer입니다."
   }
 ]

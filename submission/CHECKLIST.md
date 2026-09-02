@@ -12,6 +12,7 @@
 - [x] English text-description draft
 - [x] Under-three-minute demo script with English narration
 - [x] Larger English-only burned-caption source
+- [x] Korean male-narration companion version with Korean-only captions
 - [ ] Upload the final video to YouTube as Public
 - [x] Replace the repository placeholder in submission drafts
 - [ ] Add the public YouTube URL to Devpost

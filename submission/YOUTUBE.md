@@ -35,3 +35,5 @@ Built by HOPEDEN Agricultural Corporation.
 - Audience: Not made for kids
 - License: Standard YouTube License
 - Music: None
+
+Use the English version for the official challenge submission. The Korean version is an additional localized companion video.

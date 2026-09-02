@@ -13,6 +13,12 @@
 - Music: none
 - Upload: Public YouTube
 
+## Language versions
+
+- Official challenge version: English male narration with English-only burned captions
+- Korean companion version: Korean male narration (`ko-KR-HyunsuMultilingualNeural`) with Korean-only burned captions
+- Both versions use the same verified browser recording and 2:39 scene timing
+
 ## Visual sequence
 
 | Scene | Visual | Narration focus |
