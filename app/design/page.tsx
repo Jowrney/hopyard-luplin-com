@@ -81,7 +81,7 @@ const HeaderLeft = styled.div`
     align-items: center;
     min-width: 0;
     @media (min-width: 1200px) {
-        grid-column: 2;
+        grid-column: 1;
         grid-row: 1;
     }
 `
@@ -92,7 +92,7 @@ const HeaderCenter = styled.div`
     justify-content: center;
     min-width: 0;
     @media (min-width: 1200px) {
-        grid-column: 1;
+        grid-column: 2;
         grid-row: 1;
         justify-content: flex-start;
     }
@@ -549,10 +549,10 @@ export default function DesignPage() {
 
         <HeaderRight>
           <DesktopActions>
+            <DesignWebMCP />
             <LanguageSwitcher />
             <SafetyBadge />
             <OutlineButton onClick={openPDF}><FilePdf size={18} weight="bold" />{text('Estimate PDF', '견적서')}</OutlineButton>
-            <DesignWebMCP />
             {pricesLoading && <PriceLoadingText>{text('Loading prices…', '가격 로드 중…')}</PriceLoadingText>}
             {!isDemo && <PrimaryButton onClick={openSave}><FloppyDisk size={18} weight="bold" />{text('Save design', '설계 저장')}</PrimaryButton>}
             {!isDemo && <UserMenu userName={userName} userEmail={userEmail} />}

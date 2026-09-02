@@ -12,11 +12,14 @@ test('design workspace exposes independent input and review panel toggles', () =
   assert.match(source, /PanelBackdrop/)
 })
 
-test('mobile centers the logo while desktop aligns it left', () => {
+test('mobile centers the logo while desktop places the input button before the logo', () => {
   assert.match(source, /grid-template-columns:\s*1fr auto 1fr/)
   assert.match(source, /@media \(min-width: 1200px\)/)
   assert.match(source, /grid-template-columns:\s*auto auto 1fr/)
-  assert.match(source, /grid-column:\s*1/)
+  const headerLeft = source.slice(source.indexOf('const HeaderLeft'), source.indexOf('const HeaderCenter'))
+  const headerCenter = source.slice(source.indexOf('const HeaderCenter'), source.indexOf('const HeaderLogo'))
+  assert.match(headerLeft, /grid-column:\s*1/)
+  assert.match(headerCenter, /grid-column:\s*2/)
   assert.match(source, /<HeaderCenter>/)
   assert.match(source, /aria-label={text\('Open design inputs'/)
   assert.match(source, /aria-label={text\('Open review & estimate'/)
@@ -32,6 +35,10 @@ test('desktop header keeps language, safety, and estimate actions on top', () =>
   assert.match(header, /<DesignWebMCP/)
   assert.match(header, /Save design/)
   assert.match(header, /<UserMenu/)
+  assert.ok(header.indexOf('<DesignWebMCP') < header.indexOf('<LanguageSwitcher'))
+  assert.ok(header.indexOf('<LanguageSwitcher') < header.indexOf('<SafetyBadge'))
+  assert.ok(header.indexOf('<SafetyBadge') < header.indexOf('Estimate PDF'))
+  assert.ok(header.indexOf('Estimate PDF') < header.indexOf('aria-controls="design-review-panel"'))
 })
 
 test('mobile-only utilities remain available in the review panel', () => {
