@@ -1,0 +1,72 @@
+[
+  {
+    "scene": "landing",
+    "en": "Meet HOPEDEN Designer, a shared planning workspace for hop farmers, installers, and their AI agents.",
+    "ko": "홉 농가·시공업체·AI 에이전트를 위한 공동 설계 작업공간, HOPEDEN Designer입니다."
+  },
+  {
+    "scene": "problem",
+    "en": "A hopyard plan connects planting density, poles, wire, anchors, wind load, and cost. One change affects the whole system.",
+    "ko": "홉 농장 설계는 식재 밀도, 지주, 와이어, 앵커, 풍하중과 비용이 연결되어 한 변경이 전체에 영향을 줍니다."
+  },
+  {
+    "scene": "human-workflow",
+    "en": "The original web app already calculated seed cost, facility quantities, structural load, and live estimates from a human-operated design form.",
+    "ko": "기존 웹앱은 사람이 입력한 설계에서 종자 비용, 시설 수량, 구조 하중과 실시간 견적을 계산했습니다."
+  },
+  {
+    "scene": "two-d",
+    "en": "Every input updates a construction-oriented two-dimensional plan, including poles, anchors, main wire, training wire, and hop positions.",
+    "ko": "모든 입력은 지주, 앵커, 메인 와이어, 유인 와이어와 홉 위치를 포함한 시공용 2D 도면에 즉시 반영됩니다."
+  },
+  {
+    "scene": "three-d",
+    "en": "The same design becomes an interactive three-dimensional farm. Reusable Blender assets are placed procedurally, so every candidate remains editable.",
+    "ko": "같은 설계는 상호작용 가능한 3D 농장으로 바뀝니다. 재사용 Blender 자산을 절차적으로 배치해 모든 후보를 계속 편집할 수 있습니다."
+  },
+  {
+    "scene": "webmcp-tools",
+    "en": "For the WebMCP Challenge, we added five structured site tools instead of making an agent guess how to click the interface.",
+    "ko": "WebMCP Challenge를 위해 에이전트가 화면 클릭을 추측하는 대신 사용할 수 있는 구조화된 사이트 도구 5개를 추가했습니다."
+  },
+  {
+    "scene": "read-context",
+    "en": "The agent first reads the active design, quantities, pricing status, safety status, regional profiles, and current collaboration state.",
+    "ko": "에이전트는 먼저 현재 설계, 수량, 가격 상태, 안전 상태, 지역 프로파일과 협업 상태를 읽습니다."
+  },
+  {
+    "scene": "simulate",
+    "en": "It then creates two non-destructive alternatives: a Korean I-training layout and a sourced North American eighteen-foot reference system.",
+    "ko": "그다음 현재 설계를 바꾸지 않고 한국 I형 유인안과 출처가 있는 북미 18피트 참고 시스템을 생성합니다."
+  },
+  {
+    "scene": "compare",
+    "en": "Both candidates appear in the same visual workspace with differences in poles, wire, plant count, estimate, and engineering status.",
+    "ko": "두 후보는 같은 화면에서 지주, 와이어, 식재 수, 견적과 엔지니어링 상태 차이와 함께 표시됩니다."
+  },
+  {
+    "scene": "preview",
+    "en": "Previewing a candidate updates the shared two-dimensional and three-dimensional views, while preserving an exact snapshot of the original design.",
+    "ko": "후보 미리보기는 공유 2D·3D 화면을 갱신하면서 원래 설계의 정확한 스냅샷을 보존합니다."
+  },
+  {
+    "scene": "approval",
+    "en": "During preview, Apply and Discard are registered dynamically, increasing the tool count from five to seven. The agent must wait for human approval.",
+    "ko": "미리보기 중 Apply와 Discard가 동적으로 등록되어 도구가 5개에서 7개로 늘어나며, 에이전트는 사람의 승인을 기다려야 합니다."
+  },
+  {
+    "scene": "integrity",
+    "en": "Discard restores the previous design and returns to five tools. Reference-only regions never invent live prices or local engineering approval.",
+    "ko": "Discard는 이전 설계를 복원하고 도구를 5개로 되돌립니다. 참고 지역에는 실시간 가격이나 현지 안전 승인을 만들어내지 않습니다."
+  },
+  {
+    "scene": "impact",
+    "en": "HOPEDEN turns a complex agricultural estimate into a transparent human-agent design conversation, without taking final decisions away from the farmer.",
+    "ko": "HOPEDEN은 복잡한 농업 견적을 투명한 사람-에이전트 설계 대화로 바꾸면서 최종 결정권은 농가에 남겨둡니다."
+  },
+  {
+    "scene": "closing",
+    "en": "Plan precisely, compare safely, and build with confidence. This is HOPEDEN Designer, powered by WebMCP.",
+    "ko": "정확하게 설계하고, 안전하게 비교하고, 확신을 갖고 시공하세요. WebMCP 기반 HOPEDEN Designer입니다."
+  }
+]
