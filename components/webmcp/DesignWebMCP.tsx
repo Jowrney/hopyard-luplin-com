@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import styled from 'styled-components'
 import { useSafeWebMCP } from '@/lib/webmcp/use-safe-webmcp'
 import { listRegionalProfiles } from '@/lib/design/regional-profiles'
@@ -19,13 +20,17 @@ import {
 import { useCandidateStore } from '@/stores/candidateStore'
 import { useDesignStore } from '@/stores/designStore'
 import { usePriceStore } from '@/stores/priceStore'
+import { WebMCPHelpDialog } from '@/components/webmcp/WebMCPHelpDialog'
 
-const StatusBadge = styled.span<{ $active: boolean }>`
+const StatusBadge = styled.button<{ $active: boolean }>`
   display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.55rem;
   border-radius:999px;font-size:0.68rem;font-weight:700;white-space:nowrap;
   color:${({ $active }) => $active ? '#166534' : '#6b7280'};
   background:${({ $active }) => $active ? '#dcfce7' : '#f3f4f6'};
   border:1px solid ${({ $active }) => $active ? '#86efac' : '#e5e7eb'};
+  cursor:pointer;font-family:inherit;
+  &:hover{filter:brightness(0.98);box-shadow:0 1px 3px rgba(15,23,42,0.1);}
+  &:focus-visible{outline:2px solid #16a34a;outline-offset:2px;}
 `
 
 function currentSnapshot() {
@@ -48,6 +53,7 @@ function currentContext() {
 }
 
 export function DesignWebMCP() {
+  const [helpOpen, setHelpOpen] = useState(false)
   const hasPreview = useCandidateStore((state) => state.previewCandidate !== null)
   const reportError = (error: unknown) => console.error('WebMCP tool error:', error)
 
@@ -170,9 +176,24 @@ export function DesignWebMCP() {
   const registered = states.filter((state) => state.registered).length
 
   return (
-    <StatusBadge $active={supported} title={supported ? `${registered} site tools registered` : 'Use ChatGPT browser or Chrome with WebMCP enabled'}>
-      <span>{supported ? '●' : '○'}</span>
-      <span>{supported ? `WebMCP ${registered}` : 'WebMCP ready'}</span>
-    </StatusBadge>
+    <>
+      <StatusBadge
+        type="button"
+        $active={supported}
+        title={supported ? `${registered} site tools registered — click for testing guide` : 'Click for WebMCP setup and testing guide'}
+        aria-haspopup="dialog"
+        aria-expanded={helpOpen}
+        onClick={() => setHelpOpen(true)}
+      >
+        <span>{supported ? '●' : '○'}</span>
+        <span>{supported ? `WebMCP ${registered}` : 'WebMCP ready'}</span>
+      </StatusBadge>
+      <WebMCPHelpDialog
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        supported={supported}
+        registered={registered}
+      />
+    </>
   )
 }
