@@ -13,5 +13,8 @@ test('deployment ships the checked-out commit instead of pulling from the privat
 test('deployment can be run manually and verifies the public demo route', () => {
   assert.match(workflow, /workflow_dispatch:/)
   assert.match(workflow, /\/design\/demo/)
-  assert.match(workflow, /curl -fsS/)
+  assert.match(workflow, /--write-out '%\{http_code\}'/)
+  assert.match(workflow, /"\$status" = "200"/)
+  assert.match(workflow, /WebMCP Challenge Demo/)
+  assert.doesNotMatch(workflow, /curl[^\n]*--location/)
 })

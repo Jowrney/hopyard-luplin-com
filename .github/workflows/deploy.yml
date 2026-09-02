@@ -71,7 +71,17 @@ jobs:
             pm2 restart hopyard
 
             attempts=0
-            until curl -fsS http://127.0.0.1:3000/design/demo >/dev/null; do
+            while true; do
+              body=$(mktemp)
+              status=$(curl --silent --show-error \
+                --output "$body" \
+                --write-out '%{http_code}' \
+                http://127.0.0.1:3000/design/demo || true)
+              if [ "$status" = "200" ] && grep -q 'WebMCP Challenge Demo' "$body"; then
+                rm -f "$body"
+                break
+              fi
+              rm -f "$body"
               attempts=$((attempts + 1))
               if [ "$attempts" -ge 20 ]; then
                 pm2 logs hopyard --lines 80 --nostream
