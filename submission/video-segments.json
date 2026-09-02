@@ -2,7 +2,7 @@
   {
     "scene": "landing",
     "en": "Meet Hopyard Designer, a shared planning workspace for hop farmers, installers, and their AI agents.",
-    "ko": "홉 농가, 시공업체와 AI 에이전트가 함께 쓰는 설계 공간, Hopyard Designer입니다."
+    "ko": "홉 농가, 시공업체와 인공지능 에이전트가 함께 쓰는 설계 공간, 홉 야드 디자이너입니다."
   },
   {
     "scene": "problem",
@@ -27,12 +27,13 @@
   {
     "scene": "asset-closeups",
     "en": "Zooming in reveals the reusable Blender assets: galvanized poles, perimeter anchors, wire hardware, and hops trained along the support lines. Then we zoom back out to the full farm.",
-    "ko": "확대하면 재사용 가능한 Blender 자산인 아연도금 지주, 외곽 앵커, 와이어 하드웨어와 유인선을 따라 자라는 홉이 보입니다. 다시 전체 농장으로 축소합니다."
+    "ko": "확대하면 재사용 가능한 블렌더 자산인 아연도금 지주, 외곽 앵커, 와이어 하드웨어와 유인선을 따라 자라는 홉이 보입니다. 다시 전체 농장으로 축소합니다."
   },
   {
     "scene": "webmcp-tools",
     "en": "For the WebMCP Challenge, we added five structured site tools instead of making an agent guess how to click the interface.",
-    "ko": "WebMCP Challenge를 위해 에이전트가 화면 클릭을 추측하는 대신 사용할 수 있는 구조화된 사이트 도구 5개를 추가했습니다."
+    "ko": "웹 MCP 챌린지를 위해 에이전트가 화면 클릭을 추측하는 대신 사용할 수 있는 구조화된 사이트 도구 5개를 추가했습니다.",
+    "koSpoken": "웹 엠씨피 챌린지를 위해 에이전트가 화면 클릭을 추측하는 대신 사용할 수 있는 구조화된 사이트 도구 5개를 추가했습니다."
   },
   {
     "scene": "read-context",
@@ -43,8 +44,8 @@
     "scene": "simulate",
     "en": "It then creates two non-destructive alternatives: a Korean I-shaped training layout and a sourced North American eighteen-foot Y-trained reference system.",
     "spoken": "It then creates two non-destructive alternatives: a Korean eye-shaped training layout and a sourced North American eighteen-foot Y-trained reference system.",
-    "ko": "현재 설계를 바꾸지 않고 두 대안을 만듭니다. 한국형 I자형 유인안과 출처가 있는 북미 18피트 Y자형 유인 참고안입니다.",
-    "koSpoken": "현재 설계를 바꾸지 않고 두 대안을 만듭니다. 한국형 아이자형 유인안과 출처가 있는 북미 십팔 피트 와이자형 유인 참고안입니다."
+    "ko": "현재 설계를 바꾸지 않고 두 대안을 만듭니다. 한국형 I자형 유인안과 북미 18피트 Y자형 유인 참고안입니다.",
+    "koSpoken": "현재 설계를 바꾸지 않고 두 대안을 만듭니다. 한국형 아이자형 유인안과 북미 십팔 피트 와이자형 유인 참고안입니다."
   },
   {
     "scene": "compare",
@@ -61,7 +62,7 @@
   {
     "scene": "preview",
     "en": "The selected candidate updates the shared two-dimensional and three-dimensional views while preserving an exact snapshot of the original design.",
-    "ko": "선택된 후보가 공유 2차원과 3차원 화면에 반영되며 원래 설계의 정확한 스냅샷은 보존됩니다."
+    "ko": "선택한 후보가 화면에서 2차원과 3차원으로 표시되며 원래 설계의 정확한 스냅샷은 보존됩니다."
   },
   {
     "scene": "approval",
@@ -76,11 +77,12 @@
   {
     "scene": "impact",
     "en": "Hopyard Designer turns a complex agricultural estimate into a transparent human-agent design conversation, without taking final decisions away from the farmer.",
-    "ko": "Hopyard Designer는 복잡한 농업 견적을 투명한 사람과 에이전트의 설계 대화로 바꾸면서 최종 결정권은 농가에 남겨둡니다."
+    "ko": "홉 야드 디자이너는 복잡한 농업 견적을 투명하게 사람과 에이전트가 함께 검토하는 설계 대화로 바꾸면서 최종 결정권은 농가에 남겨둡니다."
   },
   {
     "scene": "closing",
     "en": "Plan precisely, compare safely, and build with confidence. This is Hopyard Designer by HOPEDEN, powered by WebMCP.",
-    "ko": "정확하게 설계하고 안전하게 비교하세요. WebMCP 기반, HOPEDEN의 Hopyard Designer입니다."
+    "ko": "정확하게 설계하고 안전하게 비교하세요. 웹 MCP 기반, 홉이든의 홉 야드 디자이너입니다.",
+    "koSpoken": "정확하게 설계하고 안전하게 비교하세요. 웹 엠씨피 기반, 홉이든의 홉 야드 디자이너입니다."
   }
 ]
