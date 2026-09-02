@@ -71,7 +71,7 @@ def main() -> None:
             'sceneDuration': round(GAP_SECONDS + clip_duration, 3),
         })
         srt_blocks.append(
-            f'{index}\n{srt_time(start)} --> {srt_time(end)}\n{segment["en"]}\n{segment["ko"]}\n'
+            f'{index}\n{srt_time(start)} --> {srt_time(end)}\n{segment["en"]}\n'
         )
         wav_paths.extend([silence, wav])
         cursor = end
@@ -85,12 +85,12 @@ def main() -> None:
     )
 
     (WORK_DIR / 'timings.json').write_text(json.dumps(timeline, ensure_ascii=False, indent=2) + '\n')
-    (WORK_DIR / 'bilingual.srt').write_text('\n'.join(srt_blocks), encoding='utf-8')
+    (WORK_DIR / 'english.srt').write_text('\n'.join(srt_blocks), encoding='utf-8')
     print(json.dumps({
         'segments': len(timeline),
         'duration': round(duration(narration), 3),
         'narration': str(narration),
-        'subtitles': str(WORK_DIR / 'bilingual.srt'),
+        'subtitles': str(WORK_DIR / 'english.srt'),
         'timings': str(WORK_DIR / 'timings.json'),
     }, indent=2))
 

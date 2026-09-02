@@ -90,7 +90,7 @@ export const SIMULATE_DESIGN_INPUT_SCHEMA = {
     poleSpacingM: { type: 'number', minimum: 2, maximum: 50, description: 'Pole spacing along a row in metres.' },
     poleEffectiveHeightM: { type: 'number', minimum: 2, maximum: 12, description: 'Pole height above ground in metres.' },
     region: { type: 'string', enum: WIND_REGIONS, description: 'Korean preliminary wind region.' },
-    trainingType: { type: 'string', enum: TRAINING_TYPES, description: 'Straight I or split V training system.' },
+    trainingType: { type: 'string', enum: TRAINING_TYPES, description: 'I means straight I-shaped training; V is the wire value for Y-shaped split training.' },
     poleCode: { type: 'string', description: 'Material catalog pole code.', maxLength: 80 },
     wireCode: { type: 'string', description: 'Material catalog main-wire code.', maxLength: 80 },
     anchorCode: { type: 'string', description: 'Material catalog anchor code.', maxLength: 80 },

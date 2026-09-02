@@ -66,14 +66,14 @@ export function calculateQuantities(inputs: DesignInputs): QuantityResult {
     mastColCount * lastMastX +   // Z 방향 연결 (열)
     mastRowCount * lastMastZ     // X 방향 연결 (행)
 
-  // 보조 유인 와이어: I자형은 두둑 중앙 1줄, V자형은 좌우 2줄
+  // 보조 유인 와이어: I자형은 두둑 중앙 1줄, Y자형(wire enum V)은 좌우 2줄
   const subWirePerRidge = trainingType === 'I' ? 1 : 2
   const subWireM = ridgeCount * subWirePerRidge * lastMastZ
 
   // 앵커 와이어: 각 외곽 마스트에서 바깥 앵커로
   const anchorWireM = outerPoleCount * MAST_SPAN * 0.4 * 1.2 // 앵커 거리 × 여유
 
-  // 유인줄 (yarn): I자형은 홉당 1줄, V자형은 홉당 2줄
+  // 유인줄 (yarn): I자형은 홉당 1줄, Y자형(wire enum V)은 홉당 2줄
   const twinesPerPlant = trainingType === 'I' ? 1 : 2
   const yarnWireM = plantCount * twinesPerPlant * poleEffectiveHeightM * 1.1
 

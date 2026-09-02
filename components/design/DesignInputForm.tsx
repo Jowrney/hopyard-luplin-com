@@ -943,15 +943,15 @@ export function DesignInputForm() {
         <DropdownWrap ref={trainRef}>
           <DropdownBtn onClick={() => setTrainOpen(v=>!v)}>
             <span>{inputs.trainingType === 'V'
-              ? text('V-trellis — 2 training strings', 'V자형 — 유인줄 2줄')
-              : text('I-trellis — 1 training string', 'I자형 — 유인줄 1줄')}</span>
+              ? text('Y-shaped training — 2 strings', 'Y자형 — 유인줄 2줄')
+              : text('I-shaped training — 1 string', 'I자형 — 유인줄 1줄')}</span>
             <DropdownArrow $open={trainOpen}>▼</DropdownArrow>
           </DropdownBtn>
           {trainOpen && (
             <DropdownMenu>
               {([
-                { value: 'V' as TrainingType, label: text('V-trellis', 'V자형'), desc: text('Two strings per plant, supported by wires on both sides', '홉당 유인줄 2줄, 양쪽 와이어 거치') },
-                { value: 'I' as TrainingType, label: text('I-trellis', 'I자형'), desc: text('One string per plant, supported by a center-row wire', '홉당 유인줄 1줄, 두둑 중앙 와이어 거치') },
+                { value: 'V' as TrainingType, label: text('Y-shaped training', 'Y자형'), desc: text('Two strings branch from each plant to wires on both sides', '식재점에서 좌우 와이어로 갈라지는 유인줄 2줄') },
+                { value: 'I' as TrainingType, label: text('I-shaped training', 'I자형'), desc: text('One straight string from each plant to the center-row wire', '식재점에서 중앙 와이어로 곧게 올라가는 유인줄 1줄') },
               ] as const).map(opt => (
                 <DropdownItem key={opt.value} $selected={inputs.trainingType===opt.value}
                               onClick={() => { updateInputs({ trainingType: opt.value }); setTrainOpen(false) }}>

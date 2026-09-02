@@ -42,7 +42,7 @@ const HOPYARD_URL = 'https://hopyard.luplin.com'
 const PROFILES: readonly RegionalDesignProfile[] = [
   {
     id: 'KR_STEEL_V',
-    name: 'Korea galvanized steel V-trellis',
+    name: 'Korea galvanized steel Y-trained trellis',
     market: 'KR',
     unitSystem: 'metric',
     currency: 'KRW',
@@ -96,7 +96,7 @@ const PROFILES: readonly RegionalDesignProfile[] = [
   },
   {
     id: 'US_HIGH_TRELLIS',
-    name: 'North America 18 ft V-trellis',
+    name: 'North America 18 ft Y-trained trellis',
     market: 'US',
     unitSystem: 'imperial',
     currency: 'USD',

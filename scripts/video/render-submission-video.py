@@ -2,7 +2,6 @@
 import json
 import shutil
 import subprocess
-import textwrap
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -14,28 +13,13 @@ FINAL_DIR = ARTIFACT_ROOT / 'final'
 TIMINGS = WORK_DIR / 'timings.json'
 RAW_VIDEO = WORK_DIR / 'screen-raw.mp4'
 NARRATION = WORK_DIR / 'narration.wav'
-OUTPUT = FINAL_DIR / 'HOPEDEN-WebMCP-Challenge-Demo.mp4'
+OUTPUT = FINAL_DIR / 'Hopyard-Designer-WebMCP-Challenge-Demo.mp4'
 EN_FONT = Path('/opt/X11/share/system_fonts/Supplemental/Arial.ttf')
-KO_FONT = Path('/opt/X11/share/system_fonts/AppleSDGothicNeo.ttc')
 WIDTH = 1920
 HEIGHT = 1080
 
 
-def wrap_by_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max_width: int, korean: bool = False) -> list[str]:
-    if korean:
-        lines: list[str] = []
-        current = ''
-        for char in text:
-            candidate = current + char
-            if current and draw.textbbox((0, 0), candidate, font=font)[2] > max_width:
-                lines.append(current.strip())
-                current = char
-            else:
-                current = candidate
-        if current.strip():
-            lines.append(current.strip())
-        return lines
-
+def wrap_by_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list[str]:
     words = text.split()
     lines = []
     current = ''
@@ -51,18 +35,14 @@ def wrap_by_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeType
     return lines
 
 
-def render_caption(index: int, en: str, ko: str) -> Path:
-    en_font = ImageFont.truetype(str(EN_FONT), 31)
-    ko_font = ImageFont.truetype(str(KO_FONT), 29)
+def render_caption(index: int, en: str) -> Path:
+    en_font = ImageFont.truetype(str(EN_FONT), 36)
     probe = Image.new('RGBA', (1, 1))
     draw = ImageDraw.Draw(probe)
-    max_text_width = 1580
+    max_text_width = 1600
     en_lines = wrap_by_width(draw, en, en_font, max_text_width)
-    ko_lines = wrap_by_width(draw, ko, ko_font, max_text_width, korean=True)
-    line_height_en = 39
-    line_height_ko = 38
-    gap = 8
-    box_height = 26 + len(en_lines) * line_height_en + gap + len(ko_lines) * line_height_ko + 25
+    line_height_en = 46
+    box_height = 24 + len(en_lines) * line_height_en + 24
     image = Image.new('RGBA', (1720, box_height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
     draw.rounded_rectangle((0, 0, 1719, box_height - 1), radius=18, fill=(8, 18, 28, 218), outline=(134, 239, 172, 130), width=2)
@@ -71,11 +51,7 @@ def render_caption(index: int, en: str, ko: str) -> Path:
         bbox = draw.textbbox((0, 0), line, font=en_font)
         draw.text(((1720 - (bbox[2] - bbox[0])) / 2, y), line, font=en_font, fill=(255, 255, 255, 255))
         y += line_height_en
-    y += gap
-    for line in ko_lines:
-        bbox = draw.textbbox((0, 0), line, font=ko_font)
-        draw.text(((1720 - (bbox[2] - bbox[0])) / 2, y), line, font=ko_font, fill=(187, 247, 208, 255))
-        y += line_height_ko
+
     output = WORK_DIR / f'caption-{index:02}.png'
     image.save(output)
     return output
@@ -86,7 +62,7 @@ def main() -> None:
         raise FileNotFoundError(RAW_VIDEO)
     timings = json.loads(TIMINGS.read_text())
     FINAL_DIR.mkdir(parents=True, exist_ok=True)
-    captions = [render_caption(item['index'], item['en'], item['ko']) for item in timings]
+    captions = [render_caption(item['index'], item['en']) for item in timings]
 
     command = ['ffmpeg', '-y', '-loglevel', 'warning', '-i', str(RAW_VIDEO), '-i', str(NARRATION)]
     for caption in captions:
@@ -101,8 +77,9 @@ def main() -> None:
         current = f'v{offset - 1}'
         start = item['start']
         end = item['end']
+        y_position = '78' if item['scene'] in {'compare', 'human-choice', 'preview', 'approval', 'integrity'} else 'H-h-34'
         filters.append(
-            f'[{previous}][{offset}:v]overlay=(W-w)/2:H-h-34:eof_action=pass:'
+            f'[{previous}][{offset}:v]overlay=(W-w)/2:{y_position}:eof_action=pass:'
             f"enable='between(t,{start},{end})'[{current}]"
         )
         previous = current
@@ -117,7 +94,7 @@ def main() -> None:
         '-shortest', '-movflags', '+faststart', str(OUTPUT),
     ])
     subprocess.run(command, check=True)
-    shutil.copy2(WORK_DIR / 'bilingual.srt', FINAL_DIR / 'HOPEDEN-WebMCP-Challenge-bilingual.srt')
+    shutil.copy2(WORK_DIR / 'english.srt', FINAL_DIR / 'Hopyard-Designer-WebMCP-Challenge-English.srt')
     print(OUTPUT)
 
 

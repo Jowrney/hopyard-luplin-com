@@ -11,7 +11,7 @@
 - [x] Clear existing-versus-challenge work documentation
 - [x] English text-description draft
 - [x] Under-three-minute demo script with English narration
-- [x] English and Korean burned-caption source
+- [x] Larger English-only burned-caption source
 - [ ] Upload the final video to YouTube as Public
 - [x] Replace the repository placeholder in submission drafts
 - [ ] Add the public YouTube URL to Devpost
@@ -33,7 +33,7 @@ Use `submission/DEVPOST.md` as the source for:
 
 - [ ] Watch at 1080p with sound
 - [ ] Verify English narration is clear
-- [ ] Verify every English subtitle has Korean directly below
+- [ ] Verify English subtitles are readable and do not cover the candidate tray
 - [ ] Confirm no credentials, local paths, or private browser data appear
 - [ ] Confirm the actual 5 → 7 → 5 tool lifecycle is visible
 - [ ] Confirm the 3D orbit scene is smooth

@@ -290,8 +290,8 @@ export function EstimatePanel() {
     return text(`part of ${number(quantities.totalWireM)} m system`, `${number(quantities.totalWireM)} m 시스템에 포함`)
   }
   const profileName = activeProfile.id === 'US_HIGH_TRELLIS'
-    ? text('North America 18 ft V-trellis', '북미형 18 ft V자 트렐리스')
-    : text('Korea galvanized steel V-trellis', '한국형 아연도금 강관 V자 트렐리스')
+    ? text('North America 18 ft Y-trained trellis', '북미형 18 ft Y자 유인 트렐리스')
+    : text('Korea galvanized steel Y-trained trellis', '한국형 아연도금 강관 Y자 유인 트렐리스')
   const profileDescription = activeProfile.id === 'US_HIGH_TRELLIS'
     ? text('Quarter-acre high-trellis reference configuration based on Nebraska Extension EC3026.', 'Nebraska Extension EC3026에 기반한 1/4 acre 고식 트렐리스 참고 구성입니다.')
     : text('Current HOPEDEN steel-pole system for preliminary Korean hopyard planning.', '한국 홉 농장 예비 설계를 위한 현재 HOPEDEN 강관 지주 시스템입니다.')

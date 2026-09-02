@@ -1,4 +1,4 @@
-# HOPEDEN Designer — WebMCP Challenge Submission Draft
+# Hopyard Designer — WebMCP Challenge Submission Draft
 
 ## Tagline
 
@@ -6,7 +6,7 @@ A shared hopyard design workspace where an AI agent explores alternatives and th
 
 ## What it does
 
-HOPEDEN Designer helps hop farmers and facility installers plan planting density, poles, wire, anchors, training systems, preliminary structural loads, and project cost. Human inputs immediately update calculated quantities, a construction-oriented 2D plan, an interactive 3D farm, and an estimate.
+Hopyard Designer by HOPEDEN helps hop farmers and facility installers plan planting density, poles, wire, anchors, training systems, preliminary structural loads, and project cost. Human inputs immediately update calculated quantities, a construction-oriented 2D plan, an interactive 3D farm, and an estimate.
 
 ## Why this is a strong fit for WebMCP
 
@@ -21,8 +21,8 @@ Before the WebMCP extension, a person had to change one input at a time, remembe
 A representative workflow is:
 
 1. Read the active design context.
-2. Simulate a Korean I-training alternative.
-3. Simulate a sourced North American 18 ft reference alternative.
+2. Simulate a Korean I-shaped training alternative.
+3. Simulate a sourced North American 18 ft Y-trained reference alternative.
 4. Show both candidates in the comparison tray.
 5. Preview one candidate in 2D and 3D.
 6. Compare poles, wire length, plant count, estimate, and engineering status.

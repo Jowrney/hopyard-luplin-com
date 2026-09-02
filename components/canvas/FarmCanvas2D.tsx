@@ -180,7 +180,7 @@ export function FarmCanvas2D() {
         // I자형: 두둑 중앙 1줄만
         offsets.push(0)
       } else {
-        // V자형
+        // wire enum V: 사용자에게는 Y자형 유인으로 표시
         if(isFirst)     offsets.push(0,+WIRE_OFF)
         else if(isLast) offsets.push(-WIRE_OFF,0)
         else            offsets.push(-WIRE_OFF,+WIRE_OFF)

@@ -2,11 +2,11 @@
 
 ## Title
 
-HOPEDEN Designer — Human-Agent Hopyard Design with WebMCP
+Hopyard Designer — Human-Agent Hopyard Design with WebMCP
 
 ## Description
 
-HOPEDEN Designer is a shared planning workspace for hop farmers, installers, and AI agents.
+Hopyard Designer by HOPEDEN is a shared planning workspace for hop farmers, installers, and AI agents.
 
 The existing product calculates seed cost, facility quantities, preliminary structural loads, real-time estimates, and synchronized 2D/3D farm views. During the OpenAI WebMCP Challenge, it was extended with a non-destructive human-agent design workflow.
 
@@ -31,7 +31,7 @@ Built by HOPEDEN Agricultural Corporation.
 - Visibility: Public
 - Category: Science & Technology
 - Language: English
-- Captions: upload `HOPEDEN-WebMCP-Challenge-bilingual.srt` as an additional track if desired; bilingual captions are already burned into the video.
+- Captions: English captions are already burned into the video; `Hopyard-Designer-WebMCP-Challenge-English.srt` can also be uploaded as a caption track.
 - Audience: Not made for kids
 - License: Standard YouTube License
 - Music: None

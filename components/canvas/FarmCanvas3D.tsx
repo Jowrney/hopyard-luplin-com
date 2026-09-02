@@ -417,9 +417,9 @@ export function FarmCanvas3D() {
         }
       }
 
-      // ── 홉 & V자 유인줄 ──────────────────────────
+      // ── 홉 & Y자 유인줄 (wire enum V) ──────────────────
       // 두둑마다, 마스트 구간(Z)마다 홉 배치
-      // 유인줄: 홉 → 해당 두둑의 좌우 보조 유인 와이어로 V자 연결
+      // 유인줄: 식재점 → 해당 두둑의 좌우 보조 유인 와이어로 Y자 연결
       const vineTransforms:{position:THREETypes.Vector3;quaternion:THREETypes.Quaternion;scale:THREETypes.Vector3}[]=[]
       const vineNominalHeight=Number(vineRoot?.userData.nominal_height_m ?? 5.15)
       for(const ridgeX of ridgeXs){
@@ -478,7 +478,7 @@ export function FarmCanvas3D() {
 
             const vineBase=new THREE.Vector3(ridgeX,0.08,hz)
 
-            // I형은 중앙 수직 1줄, V형은 좌우 상부 와이어로 경사진 2줄
+            // I형은 중앙 수직 1줄, Y형(wire enum V)은 좌우 상부 와이어로 경사진 2줄
             for(const wx of validWireXs){
               const target=new THREE.Vector3(wx,wireWy,hz)
               scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([vineBase,target]),yarnMat))
@@ -540,7 +540,9 @@ export function FarmCanvas3D() {
       <TopLabel>
         <span>
           🌿 {profileId === 'US_HIGH_TRELLIS' ? text('North America reference', '북미 기준') : text('Korea', '대한민국')} ·{' '}
-          {poleAssetLabel} · {text(`${inputs.trainingType}-training`, `${inputs.trainingType}자형 유인`)}
+          {poleAssetLabel} · {inputs.trainingType === 'V'
+            ? text('Y-shaped training', 'Y자형 유인')
+            : text('I-shaped training', 'I자형 유인')}
         </span>
         <AssetStatus $loaded={assetStatus.kind === 'loaded'}>{assetStatusLabel}</AssetStatus>
       </TopLabel>
