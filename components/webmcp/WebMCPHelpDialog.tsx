@@ -152,7 +152,7 @@ export function WebMCPHelpDialog({ open, onClose, supported, registered }: WebMC
                 : (ko ? '현재 브라우저에서 WebMCP API를 사용할 수 없습니다.' : 'The WebMCP API is unavailable in this browser.')}
             </HeaderStatus>
           </div>
-          <CloseButton ref={closeButtonRef} type="button" onClick={onClose} aria-label={ko?'닫기':'Close'}>×</CloseButton>
+          <CloseButton ref={closeButtonRef} autoFocus type="button" onClick={onClose} aria-label={ko?'닫기':'Close'}>×</CloseButton>
         </Header>
 
         <Body>
